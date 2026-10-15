@@ -62,7 +62,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     final isTabletLandscape = size.width >= 750 && size.width > size.height;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Colors.white,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -87,7 +87,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
         top: 0,
         bottom: 0,
         right: 0,
-        width: size.width * 0.62,
+        width: size.width * 0.58,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -97,25 +97,25 @@ class _UserFormScreenState extends State<UserFormScreen> {
               alignment: Alignment.centerRight,
               errorBuilder: (context, error, stackTrace) {
                 return Image.asset(
-                  'assets/images/solar_rooftop_hero.jpg',
+                  'assets/images/hero_banner.png',
                   fit: BoxFit.cover,
                   alignment: Alignment.centerRight,
                 );
               },
             ),
-            // Soft gradient fading a little from the left side into the solar image
+            // Soft gradient fading smoothly on the left edge only
             Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                   colors: [
-                    Color(0xFFF8FAFC), // Fully opaque at sidebar boundary
-                    Color(0xB2F8FAFC), // 70% fade
-                    Color(0x33F8FAFC), // 20% slight fade
-                    Colors.transparent, // Crisp solar panels
+                    Colors.white,
+                    Color(0xD9FFFFFF), // 85% white
+                    Color(0x22FFFFFF), // soft transparent
+                    Colors.transparent,
                   ],
-                  stops: [0.0, 0.18, 0.48, 1.0],
+                  stops: [0.0, 0.14, 0.32, 0.50],
                 ),
               ),
             ),
@@ -150,9 +150,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                   colors: [
-                    Color(0xFFF8FAFC),
-                    Color(0xAAF8FAFC),
-                    Color(0x22F8FAFC),
+                    Colors.white,
+                    Color(0xAAFFFFFF),
+                    Color(0x22FFFFFF),
                     Colors.transparent,
                   ],
                   stops: [0.0, 0.35, 0.70, 1.0],
@@ -169,18 +169,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
   Widget _buildTabletLandscapeLayout(BuildContext context) {
     return Row(
       children: [
-        // Left Column: Modern Branded Info Sidebar
+        // Left Column: Clean branded info directly on white page
         Expanded(
           flex: 42,
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                right: BorderSide(color: Color(0xFFE2E8F0), width: 1),
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 32),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -322,7 +315,6 @@ class _UserFormScreenState extends State<UserFormScreen> {
             ),
           ),
         ),
-      ),
 
         // Right Column: The Form Card
         Expanded(
