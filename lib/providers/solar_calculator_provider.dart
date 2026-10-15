@@ -94,4 +94,19 @@ class SolarCalculatorProvider extends ChangeNotifier {
     );
     notifyListeners();
   }
+
+  void clearAll() {
+    _input = const SolarInput(
+      state: 'West Bengal',
+      monthlyBill: 0,
+      solarApplication: 'Residential',
+      installationType: 'Rooftop',
+      moduleWatt: 550,
+      counts: {},
+      otherWatts: 0,
+    );
+    _result = null;
+    _errorMessage = null;
+    notifyListeners();
+  }
 }

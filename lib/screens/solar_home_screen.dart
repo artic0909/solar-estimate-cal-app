@@ -188,6 +188,53 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     }
   }
 
+  void _handleClearForm() {
+    setState(() {
+      _nameController.clear();
+      _phoneController.clear();
+      _emailController.clear();
+      _billController.clear();
+      _otherWattsController.clear();
+      _selectedState = 'West Bengal';
+      _propertyType = 'Residential';
+      _installationType = 'Rooftop';
+      _moduleWatt = 550;
+      _fansCount = 0;
+      _lightsCount = 0;
+      _tvCount = 0;
+      _acsCount = 0;
+      _washingCount = 0;
+      _fridgeCount = 0;
+      _kettleCount = 0;
+      _inductionCount = 0;
+      _pumpCount = 0;
+      _geyserCount = 0;
+    });
+
+    context.read<SolarCalculatorProvider>().clearAll();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: const [
+            Icon(Icons.cleaning_services_rounded, color: Colors.white, size: 22),
+            SizedBox(width: 10),
+            Text(
+              'Form cleared successfully.',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF475569),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+
+    _scrollToCustomerDetails();
+  }
+
   void _scrollToCalculator() {
     final context = _calculatorKey.currentContext;
     if (context != null) {
@@ -722,82 +769,122 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
           const SizedBox(height: 32),
 
-          // Large Centered "GET MY ESTIMATE →" Button
+          // Action Buttons: "GET MY ESTIMATE →" & "CLEAR"
           Center(
-            child: SizedBox(
-              width: 290,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: () {
-                  final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
-                  if (bill <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Monthly electricity bill must be greater than 0.'),
-                        backgroundColor: Color(0xFFDC2626),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    return;
-                  }
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 16,
+              runSpacing: 14,
+              children: [
+                SizedBox(
+                  width: 270,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
+                      if (bill <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Monthly electricity bill must be greater than 0.'),
+                            backgroundColor: Color(0xFFDC2626),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
 
-                  final input = _buildCurrentInput();
-                  if (input.totalLoadWatts <= 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Please specify at least one appliance or load.'),
-                        backgroundColor: Color(0xFFDC2626),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                    return;
-                  }
+                      final input = _buildCurrentInput();
+                      if (input.totalLoadWatts <= 0) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please specify at least one appliance or load.'),
+                            backgroundColor: Color(0xFFDC2626),
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
 
-                  _syncAndCalculate(notifyUI: true);
-                  _scrollToResults();
+                      _syncAndCalculate(notifyUI: true);
+                      _scrollToResults();
 
-                  final result = context.read<SolarCalculatorProvider>().result;
-                  if (result != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Estimate calculated! ${result.modules} modules • ₹ ${_formatIndianCurrency(result.monthlySaving)} monthly savings.',
-                        ),
-                        backgroundColor: const Color(0xFF0E3B6C),
-                        duration: const Duration(seconds: 3),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      final result = context.read<SolarCalculatorProvider>().result;
+                      if (result != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Estimate calculated! ${result.modules} modules • ₹ ${_formatIndianCurrency(result.monthlySaving)} monthly savings.',
+                            ),
+                            backgroundColor: const Color(0xFF0E3B6C),
+                            duration: const Duration(seconds: 3),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF36A21),
+                      foregroundColor: Colors.white,
+                      elevation: 5,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.45),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                    ),
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'GET MY ESTIMATE',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          SizedBox(width: 8),
+                          Icon(Icons.arrow_forward_rounded, size: 20),
+                        ],
                       ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF36A21),
-                  foregroundColor: Colors.white,
-                  elevation: 5,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.45),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                ),
-                child: const FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'GET MY ESTIMATE',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_rounded, size: 20),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+
+                SizedBox(
+                  width: 140,
+                  height: 52,
+                  child: OutlinedButton(
+                    onPressed: _handleClearForm,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF475569),
+                      backgroundColor: Colors.white,
+                      side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+                      elevation: 1,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.refresh_rounded, size: 18, color: Color(0xFF64748B)),
+                        SizedBox(width: 6),
+                        Text(
+                          'CLEAR',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                            color: Color(0xFF334155),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

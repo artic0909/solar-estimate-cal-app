@@ -44,6 +44,7 @@ void main() {
     expect(find.text('Submersible pump'), findsWidgets);
     expect(find.text('Geyser'), findsWidgets);
     expect(find.text('GET MY ESTIMATE'), findsOneWidget);
+    expect(find.text('CLEAR'), findsOneWidget);
 
     // 4. Section 3: Solar Estimate Metrics
     expect(find.text('YOUR SOLAR ESTIMATE'), findsOneWidget);
