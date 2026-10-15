@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/doodle_arrow.dart';
-import '../widgets/tablet_scaffold.dart';
 import '../widgets/websol_logo.dart';
+import 'user_form_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -10,11 +10,11 @@ class WelcomeScreen extends StatelessWidget {
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const TabletScaffold(),
+            const UserFormScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
-        transitionDuration: const Duration(milliseconds: 400),
+        transitionDuration: const Duration(milliseconds: 350),
       ),
     );
   }
