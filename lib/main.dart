@@ -12,7 +12,7 @@ class SolarEstimateApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Websol Solar Calculator',
+      title: 'Websole Calculator',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
