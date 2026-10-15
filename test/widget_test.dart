@@ -46,6 +46,15 @@ void main() {
     expect(find.text('GET MY ESTIMATE'), findsOneWidget);
     expect(find.text('CLEAR'), findsOneWidget);
 
+    // Results are hidden initially until user taps GET MY ESTIMATE
+    expect(find.text('YOUR SOLAR ESTIMATE'), findsNothing);
+
+    // Ensure button is visible in scroll view, then tap "GET MY ESTIMATE"
+    await tester.ensureVisible(find.text('GET MY ESTIMATE'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('GET MY ESTIMATE'));
+    await tester.pumpAndSettle();
+
     // 4. Section 3: Solar Estimate Metrics
     expect(find.text('YOUR SOLAR ESTIMATE'), findsOneWidget);
     expect(find.text('₹ 3,905'), findsWidgets);
@@ -85,6 +94,16 @@ void main() {
 
     expect(find.text('CALCULATE MY SAVINGS'), findsOneWidget);
     expect(find.text('TELL US ABOUT YOUR HOME'), findsOneWidget);
+
+    // Results are hidden initially until user taps GET MY ESTIMATE
+    expect(find.text('YOUR SOLAR ESTIMATE'), findsNothing);
+
+    // Ensure button is visible in scroll view, then tap "GET MY ESTIMATE"
+    await tester.ensureVisible(find.text('GET MY ESTIMATE'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('GET MY ESTIMATE'));
+    await tester.pumpAndSettle();
+
     expect(find.text('YOUR SOLAR ESTIMATE'), findsOneWidget);
     expect(find.text('YOUR IMPACT GOES BEYOND SAVINGS'), findsOneWidget);
   });

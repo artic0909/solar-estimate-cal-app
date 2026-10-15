@@ -49,13 +49,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   final GlobalKey _leadKey = GlobalKey();
 
   static final List<String> _indianStates = sunhourTable.keys.toList()..sort();
+  bool _hasCalculated = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _syncAndCalculate(notifyUI: false);
-    });
+    _hasCalculated = false;
   }
 
   @override
@@ -190,6 +189,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
   void _handleClearForm() {
     setState(() {
+      _hasCalculated = false;
       _nameController.clear();
       _phoneController.clear();
       _emailController.clear();
@@ -247,14 +247,16 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   void _scrollToResults() {
-    final context = _resultsKey.currentContext;
-    if (context != null) {
-      Scrollable.ensureVisible(
-        context,
-        duration: const Duration(milliseconds: 650),
-        curve: Curves.easeInOutCubic,
-      );
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final context = _resultsKey.currentContext;
+      if (context != null) {
+        Scrollable.ensureVisible(
+          context,
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeInOutCubic,
+        );
+      }
+    });
   }
 
   String _formatIndianCurrency(num value) {
@@ -317,7 +319,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       const SizedBox(height: 28),
 
                       // 3. Results Card ("YOUR SOLAR ESTIMATE")
-                      if (result != null) ...[
+                      if (_hasCalculated && result != null) ...[
                         _buildSolarEstimateCard(context, result),
                         const SizedBox(height: 24),
 
@@ -712,38 +714,44 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               final isTwoColumn = constraints.maxWidth >= 700;
 
               if (isTwoColumn) {
-                return Row(
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left Column (Property & Grid details)
-                    Expanded(
-                      flex: 5,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStateField(),
-                          const SizedBox(height: 20),
-                          _buildMonthlyBillField(),
-                          const SizedBox(height: 20),
-                          _buildPropertyTypeField(),
-                          const SizedBox(height: 20),
-                          _buildInstallationTypeField(),
-                          const SizedBox(height: 20),
-                          _buildModuleWattField(),
-                        ],
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left Column (Property & Grid details)
+                        Expanded(
+                          flex: 5,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildStateField(),
+                              const SizedBox(height: 20),
+                              _buildMonthlyBillField(),
+                              const SizedBox(height: 20),
+                              _buildPropertyTypeField(),
+                              const SizedBox(height: 20),
+                              _buildInstallationTypeField(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 36),
+                        // Right Column (10 Appliances & Other Load Watts)
+                        Expanded(
+                          flex: 5,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildHouseholdAppliancesField(),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 36),
-                    // Right Column (10 Appliances & Other Load Watts)
-                    Expanded(
-                      flex: 5,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHouseholdAppliancesField(),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 24),
+                    // Full-width Module Power (W) field
+                    _buildModuleWattField(),
                   ],
                 );
               } else {
@@ -758,9 +766,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     const SizedBox(height: 22),
                     _buildInstallationTypeField(),
                     const SizedBox(height: 22),
-                    _buildModuleWattField(),
-                    const SizedBox(height: 22),
                     _buildHouseholdAppliancesField(),
+                    const SizedBox(height: 22),
+                    _buildModuleWattField(),
                   ],
                 );
               }
@@ -806,6 +814,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         return;
                       }
 
+                      setState(() {
+                        _hasCalculated = true;
+                      });
                       _syncAndCalculate(notifyUI: true);
                       _scrollToResults();
 
@@ -1674,31 +1685,48 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       child: Column(
         children: [
           SizedBox(
-            width: 44,
-            height: 44,
+            width: 58,
+            height: 58,
             child: Stack(
               alignment: Alignment.center,
               children: [
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSurplus
+                        ? const Color(0xFF16A34A).withValues(alpha: 0.08)
+                        : const Color(0xFF0F5B9E).withValues(alpha: 0.08),
+                  ),
+                ),
                 CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 4.5,
+                  strokeCap: StrokeCap.round,
                   backgroundColor: const Color(0xFFE2E8F0),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0F5B9E),
                   ),
                 ),
-                Text(
-                  isSurplus ? '100%' : '$percVal%',
-                  style: TextStyle(
-                    fontSize: isSurplus ? 10 : 11,
-                    fontWeight: FontWeight.w900,
-                    color: const Color(0xFF0E3B6C),
+                Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      isSurplus ? '100%' : '$percVal%',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                        color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C),
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           const Text(
             'Bill\nReduction',
             textAlign: TextAlign.center,
