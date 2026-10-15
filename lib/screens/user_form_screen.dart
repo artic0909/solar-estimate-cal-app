@@ -475,7 +475,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
               onFieldSubmitted: (_) => _phoneFocusNode.requestFocus(),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: _buildInputDecoration(
-                hintText: 'Enter full name (e.g. Rahul Sharma)',
+                hintText: 'Enter full name',
                 prefixIcon: Icons.person_outline_rounded,
               ),
               validator: (value) {
@@ -502,7 +502,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
               onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: _buildInputDecoration(
-                hintText: 'Enter mobile number (e.g. 9876543210)',
+                hintText: 'Enter mobile number',
                 prefixIcon: Icons.phone_outlined,
               ),
               validator: (value) {
@@ -529,7 +529,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
               onFieldSubmitted: (_) => _submitForm(),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: _buildInputDecoration(
-                hintText: 'Enter email address (e.g. name@example.com)',
+                hintText: 'Enter email address',
                 prefixIcon: Icons.email_outlined,
               ),
               validator: (value) {
