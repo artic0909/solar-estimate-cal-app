@@ -188,7 +188,7 @@ class _TabletScaffoldState extends State<TabletScaffold> {
                 Text(
                   _selectedIndex == 1
                       ? 'Local CSV exports and history will appear here.'
-                      : 'Application preferences and offline sync settings.',
+                      : 'Application preferences and configuration settings.',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.blueGrey.shade600),
                 ),

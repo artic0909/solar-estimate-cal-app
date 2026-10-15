@@ -133,7 +133,7 @@ class WelcomeScreen extends StatelessWidget {
 
                   const SizedBox(height: 24),
 
-                  _buildOfflineFooter(),
+                  _buildFooterInfo(),
                 ],
               ),
             ),
@@ -151,17 +151,10 @@ class WelcomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Bar: Logo & Offline Chip
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const WebsolLogo(
-                  fontSize: 38,
-                  showTagline: true,
-                ),
-                _buildOfflineChip(),
-              ],
+            // Top Bar: Logo
+            const WebsolLogo(
+              fontSize: 38,
+              showTagline: true,
             ),
 
             const SizedBox(height: 20),
@@ -227,7 +220,7 @@ class WelcomeScreen extends StatelessWidget {
 
             const SizedBox(height: 28),
 
-            _buildOfflineFooter(),
+            _buildFooterInfo(),
           ],
         ),
       ),
@@ -332,43 +325,17 @@ class WelcomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOfflineChip() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.wifi_off_rounded, size: 14, color: Color(0xFF64748B)),
-          SizedBox(width: 6),
-          Text(
-            'Offline Mode',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF64748B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildOfflineFooter() {
+  Widget _buildFooterInfo() {
     return Row(
       children: const [
         Icon(
-          Icons.offline_pin_rounded,
+          Icons.verified_rounded,
           size: 16,
-          color: Color(0xFF64748B),
+          color: Color(0xFFF36A21),
         ),
         SizedBox(width: 6),
         Text(
-          '100% Offline Mode • Instant Tablet Estimates',
+          'Instant Tablet Calculations • Commercial & Residential',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,

@@ -63,12 +63,106 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      body: SafeArea(
-        child: isTabletLandscape
-            ? _buildTabletLandscapeLayout(context)
-            : _buildPortraitOrMobileLayout(context),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background Solar System Image (Faded from one side)
+          _buildFadedSolarBackground(size, isTabletLandscape),
+
+          // Main Screen Content
+          SafeArea(
+            child: isTabletLandscape
+                ? _buildTabletLandscapeLayout(context)
+                : _buildPortraitOrMobileLayout(context),
+          ),
+        ],
       ),
     );
+  }
+
+  /// Faded Solar System background image blended from one side
+  Widget _buildFadedSolarBackground(Size size, bool isLandscape) {
+    if (isLandscape) {
+      return Positioned(
+        top: 0,
+        bottom: 0,
+        right: 0,
+        width: size.width * 0.62,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/images/solar_panels_hero.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.centerRight,
+              errorBuilder: (context, error, stackTrace) {
+                return Image.asset(
+                  'assets/images/solar_rooftop_hero.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.centerRight,
+                );
+              },
+            ),
+            // Soft gradient fading a little from the left side into the solar image
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  colors: [
+                    Color(0xFFF8FAFC), // Fully opaque at sidebar boundary
+                    Color(0xB2F8FAFC), // 70% fade
+                    Color(0x33F8FAFC), // 20% slight fade
+                    Colors.transparent, // Crisp solar panels
+                  ],
+                  stops: [0.0, 0.18, 0.48, 1.0],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Portrait Mode: Faded from top/top-right
+      return Positioned(
+        top: 0,
+        right: 0,
+        width: size.width,
+        height: size.height * 0.42,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(
+              'assets/images/solar_panels_hero.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.topRight,
+              errorBuilder: (context, error, stackTrace) {
+                return Image.asset(
+                  'assets/images/solar_rooftop_hero.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.topRight,
+                );
+              },
+            ),
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Color(0xFFF8FAFC),
+                    Color(0xAAF8FAFC),
+                    Color(0x22F8FAFC),
+                    Colors.transparent,
+                  ],
+                  stops: [0.0, 0.35, 0.70, 1.0],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   /// Tablet Landscape 2-Column Split View
@@ -201,9 +295,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
                     ),
                     const SizedBox(height: 14),
                     _buildFeatureBullet(
-                      icon: Icons.offline_pin_rounded,
-                      title: '100% Offline Capability',
-                      subtitle: 'Zero internet required during on-site surveys',
+                      icon: Icons.solar_power_rounded,
+                      title: 'Smart Solar Sizing',
+                      subtitle: 'Optimized calculation based on local state tariffs',
                     ),
                   ],
                 ),
@@ -377,8 +471,8 @@ class _UserFormScreenState extends State<UserFormScreen> {
                           label: 'CSV Local Storage',
                         ),
                         _PortraitFeatureChip(
-                          icon: Icons.offline_pin_rounded,
-                          label: '100% Offline',
+                          icon: Icons.solar_power_rounded,
+                          label: 'Smart Sizing',
                         ),
                         _PortraitFeatureChip(
                           icon: Icons.tablet_rounded,
@@ -411,9 +505,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-            blurRadius: 24,
-            offset: const Offset(0, 12),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+            blurRadius: 32,
+            offset: const Offset(0, 14),
           ),
         ],
       ),

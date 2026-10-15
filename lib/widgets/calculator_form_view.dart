@@ -112,180 +112,27 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
       if (widget.onEstimateGenerated != null) {
         widget.onEstimateGenerated!(solarData);
       } else {
-        _showEstimateResultDialog(solarData);
+        // Pop-up dialog disabled for now as per user request:
+        // Design and calculation are preserved, popup is suppressed.
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Estimate calculated successfully for ${widget.customer.fullName} (${solarData.recommendedKw.toStringAsFixed(1)} kW system)',
+            ),
+            backgroundColor: const Color(0xFF0E3B6C),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
       }
     }
   }
 
-  void _showEstimateResultDialog(SolarData data) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF36A21).withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.solar_power_rounded,
-                  color: Color(0xFFF36A21),
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Estimated Solar Potential',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFF0E3B6C),
-                      ),
-                    ),
-                    Text(
-                      'Prepared for ${data.customer.fullName}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          content: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 500),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _buildResultMetric(
-                        label: 'Recommended System',
-                        value: '${data.recommendedKw} kW',
-                        color: const Color(0xFF0F5B9E),
-                      ),
-                      Container(width: 1, height: 40, color: const Color(0xFFCBD5E1)),
-                      _buildResultMetric(
-                        label: 'Monthly Savings',
-                        value: '₹${data.estimatedMonthlySavings.toStringAsFixed(0)}',
-                        color: const Color(0xFF10B981),
-                      ),
-                      Container(width: 1, height: 40, color: const Color(0xFFCBD5E1)),
-                      _buildResultMetric(
-                        label: 'Annual Savings',
-                        value: '₹${data.estimatedAnnualSavings.toStringAsFixed(0)}',
-                        color: const Color(0xFFF36A21),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: const [
-                      Icon(Icons.save_alt_rounded, size: 16, color: Color(0xFFB45309)),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Record is ready to be stored locally in CSV format.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: Color(0xFFB45309),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Edit Details'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Estimate for ${data.customer.fullName} successfully recorded!',
-                    ),
-                    backgroundColor: const Color(0xFF10B981),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF36A21),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Save & Close'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildResultMetric({
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w900,
-            color: color,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 11,
-            color: Color(0xFF64748B),
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ],
-    );
-  }
+  // Result pop-up dialog disabled for now as per user request.
+  // The calculator form design and data calculations remain active.
 
   @override
   Widget build(BuildContext context) {
@@ -293,56 +140,68 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
     final isLandscape = size.width >= 750 && size.width > size.height;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(
-        horizontal: isLandscape ? 36.0 : 20.0,
-        vertical: 24.0,
+      // Generous bottom padding so the button is never cut off
+      padding: EdgeInsets.only(
+        left: isLandscape ? 40.0 : 20.0,
+        right: isLandscape ? 40.0 : 20.0,
+        top: 20.0,
+        bottom: 80.0,
       ),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1080),
+          constraints: const BoxConstraints(maxWidth: 1040),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Client Proposal Strip
+              // Sleek Client Proposal Header Strip
               _buildCustomerBanner(),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 18),
 
-              // Main Form Card (Matching the Reference UI)
+              // Modern Floating Card Container
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(
+                    color: const Color(0xFFE2E8F0),
+                    width: 1.2,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                      blurRadius: 24,
-                      offset: const Offset(0, 10),
+                      color: const Color(0xFF0E3B6C).withValues(alpha: 0.05),
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
+                      spreadRadius: 2,
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFFF36A21).withValues(alpha: 0.03),
+                      blurRadius: 20,
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
                 padding: EdgeInsets.symmetric(
-                  horizontal: isLandscape ? 40 : 24,
-                  vertical: 32,
+                  horizontal: isLandscape ? 42 : 22,
+                  vertical: 34,
                 ),
                 child: Form(
                   key: _formKey,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header: Icon + TELL US ABOUT YOUR HOME
+                      // Header with Modern 3D Gradient Icon + Title
                       _buildHeader(),
 
                       const SizedBox(height: 32),
 
-                      // Layout: 2-Column Split in Landscape, Stacked in Portrait
+                      // Responsive Layout (2-Column in Landscape, Stacked in Portrait)
                       if (isLandscape)
                         _buildLandscapeFormColumns()
                       else
                         _buildPortraitFormSections(),
 
-                      const SizedBox(height: 36),
+                      const SizedBox(height: 40),
 
                       // Bottom CTA: GET MY ESTIMATE ->
                       Center(
@@ -354,9 +213,9 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFF36A21),
                               foregroundColor: Colors.white,
-                              elevation: 5,
+                              elevation: 6,
                               shadowColor: const Color(0xFFF36A21)
-                                  .withValues(alpha: 0.4),
+                                  .withValues(alpha: 0.45),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(50),
                               ),
@@ -395,21 +254,28 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: const Color(0xFFF36A21).withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.person,
-              size: 18,
+              Icons.person_rounded,
+              size: 16,
               color: Color(0xFFF36A21),
             ),
           ),
@@ -423,7 +289,7 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
                 Text(
                   widget.customer.fullName,
                   style: const TextStyle(
-                    fontSize: 15,
+                    fontSize: 14,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFF0F172A),
                   ),
@@ -439,7 +305,7 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
                 Text(
                   '✉️ ${widget.customer.emailAddress}',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: Color(0xFF64748B),
                   ),
                 ),
@@ -449,16 +315,16 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: const Color(0xFFFEF3C7),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFCBD5E1)),
+              border: Border.all(color: const Color(0xFFFDE68A)),
             ),
             child: const Text(
               'Step 2 of 2',
               style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF0F5B9E),
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFFB45309),
               ),
             ),
           ),
@@ -467,17 +333,31 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
     );
   }
 
-  /// Header with orange home circle
+  /// Header with modern home circle
   Widget _buildHeader() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Container(
-          width: 52,
-          height: 52,
-          decoration: const BoxDecoration(
-            color: Color(0xFFF36A21),
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Color(0xFFFF7A1A),
+                Color(0xFFF36A21),
+              ],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFF36A21).withValues(alpha: 0.35),
+                blurRadius: 14,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
           child: const Icon(
             Icons.home_rounded,
@@ -526,11 +406,11 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
           child: _buildLeftColumnFields(),
         ),
 
-        // Vertical Divider
+        // Vertical Divider Line
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 28),
           width: 1,
-          height: 390,
+          height: 380,
           color: const Color(0xFFE2E8F0),
         ),
 
@@ -565,7 +445,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
       children: [
         // 1. State
         _buildFieldTitle(
-          icon: Icons.location_on_outlined,
+          icon: Icons.place_rounded,
+          iconColor: const Color(0xFF0F5B9E),
           title: 'State',
         ),
         const SizedBox(height: 8),
@@ -603,7 +484,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
 
         // 2. Monthly Electricity Bill (₹)
         _buildFieldTitle(
-          icon: Icons.receipt_long_outlined,
+          icon: Icons.bolt_rounded,
+          iconColor: const Color(0xFFD97706),
           title: 'Monthly Electricity Bill (₹)',
         ),
         const SizedBox(height: 8),
@@ -630,7 +512,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
 
         // 3. Property Type (Residential / Commercial Toggle)
         _buildFieldTitle(
-          icon: Icons.apartment_rounded,
+          icon: Icons.domain_rounded,
+          iconColor: const Color(0xFF475569),
           title: 'Property Type',
         ),
         const SizedBox(height: 12),
@@ -638,6 +521,7 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
           children: [
             Expanded(
               child: _buildPropertyTypePill(
+                icon: Icons.home_rounded,
                 label: 'Residential',
                 isSelected: _propertyType == 'Residential',
                 onTap: () {
@@ -650,6 +534,7 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
             const SizedBox(width: 14),
             Expanded(
               child: _buildPropertyTypePill(
+                icon: Icons.business_rounded,
                 label: 'Commercial',
                 isSelected: _propertyType == 'Commercial',
                 onTap: () {
@@ -672,7 +557,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
       children: [
         // 1. Installation Type
         _buildFieldTitle(
-          icon: Icons.solar_power_outlined,
+          icon: Icons.roofing_rounded,
+          iconColor: const Color(0xFFF36A21),
           title: 'Installation Type',
         ),
         const SizedBox(height: 8),
@@ -712,7 +598,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
           runSpacing: 4,
           children: [
             _buildFieldTitle(
-              icon: Icons.kitchen_outlined,
+              icon: Icons.devices_other_rounded,
+              iconColor: const Color(0xFF0F5B9E),
               title: 'Household Appliances',
             ),
             const Text(
@@ -728,14 +615,15 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
 
         const SizedBox(height: 14),
 
-        // 2-Column Grid of Appliances
+        // 2-Column Grid of Appliances with Relatable Modern Icons
         Column(
           children: [
             Row(
               children: [
                 Expanded(
                   child: _buildApplianceCard(
-                    icon: Icons.toys_outlined,
+                    icon: Icons.air_rounded, // Relatable fan airflow
+                    badgeColor: const Color(0xFF0284C7),
                     name: 'Fans',
                     count: _fansCount,
                     onChanged: (val) => setState(() => _fansCount = val),
@@ -744,7 +632,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildApplianceCard(
-                    icon: Icons.lightbulb_outlined,
+                    icon: Icons.lightbulb_rounded, // Relatable lightbulb
+                    badgeColor: const Color(0xFFD97706),
                     name: 'Lights',
                     count: _lightsCount,
                     onChanged: (val) => setState(() => _lightsCount = val),
@@ -757,7 +646,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
               children: [
                 Expanded(
                   child: _buildApplianceCard(
-                    icon: Icons.ac_unit_outlined,
+                    icon: Icons.ac_unit_rounded, // Relatable AC unit
+                    badgeColor: const Color(0xFF2563EB),
                     name: 'ACs',
                     count: _acsCount,
                     onChanged: (val) => setState(() => _acsCount = val),
@@ -766,7 +656,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildApplianceCard(
-                    icon: Icons.kitchen_outlined,
+                    icon: Icons.kitchen_rounded, // Relatable Refrigerator
+                    badgeColor: const Color(0xFF059669),
                     name: 'Refrigerator',
                     count: _fridgeCount,
                     onChanged: (val) => setState(() => _fridgeCount = val),
@@ -779,7 +670,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
               children: [
                 Expanded(
                   child: _buildApplianceCard(
-                    icon: Icons.tv_outlined,
+                    icon: Icons.tv_rounded, // Relatable TV
+                    badgeColor: const Color(0xFF7C3AED),
                     name: 'TV',
                     count: _tvCount,
                     onChanged: (val) => setState(() => _tvCount = val),
@@ -788,7 +680,8 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _buildApplianceCard(
-                    icon: Icons.power_outlined,
+                    icon: Icons.power_rounded, // Relatable Power Plug
+                    badgeColor: const Color(0xFF475569),
                     name: 'Other',
                     count: _otherCount,
                     onChanged: (val) => setState(() => _otherCount = val),
@@ -802,16 +695,24 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
     );
   }
 
-  /// Field Title with Leading Icon
+  /// Field Title with Modern Rounded Icon Badge
   Widget _buildFieldTitle({
     required IconData icon,
+    required Color iconColor,
     required String title,
   }) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 20, color: const Color(0xFF0E3B6C)),
-        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: iconColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(icon, size: 16, color: iconColor),
+        ),
+        const SizedBox(width: 10),
         Flexible(
           child: Text(
             title,
@@ -826,8 +727,9 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
     );
   }
 
-  /// Property Type Selectable Pill
+  /// Property Type Selectable Pill with Icon
   Widget _buildPropertyTypePill({
+    required IconData icon,
     required String label,
     required bool isSelected,
     required VoidCallback onTap,
@@ -837,7 +739,7 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
       borderRadius: BorderRadius.circular(50),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFF36A21) : Colors.white,
@@ -856,21 +758,33 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
                 ]
               : null,
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
-          ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: isSelected ? Colors.white : const Color(0xFF64748B),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? Colors.white : const Color(0xFF475569),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  /// Appliance Counter Card matching the reference
+  /// Appliance Counter Card with colored badge
   Widget _buildApplianceCard({
     required IconData icon,
+    required Color badgeColor,
     required String name,
     required int count,
     required ValueChanged<int> onChanged,
@@ -879,12 +793,19 @@ class _CalculatorFormViewState extends State<CalculatorFormView> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF0E3B6C)),
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: badgeColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(icon, size: 16, color: badgeColor),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

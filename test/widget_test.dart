@@ -50,6 +50,16 @@ void main() {
     expect(find.text('Installation Type'), findsOneWidget);
     expect(find.text('Household Appliances'), findsOneWidget);
     expect(find.text('GET MY ESTIMATE'), findsOneWidget);
+
+    // Verify offline labels are removed from UI
+    expect(find.text('Offline'), findsNothing);
+    expect(find.text('Offline Mode'), findsNothing);
+    expect(find.text('100% Offline'), findsNothing);
+
+    // Click GET MY ESTIMATE - verify NO popup dialog appears
+    await tester.tap(find.text('GET MY ESTIMATE'));
+    await tester.pump();
+    expect(find.byType(AlertDialog), findsNothing);
   });
 
   testWidgets('Full flow in Tablet Portrait mode with forwarded user data',
@@ -63,8 +73,15 @@ void main() {
     await tester.pumpWidget(const SolarEstimateApp());
     await tester.pumpAndSettle(const Duration(seconds: 4));
 
+    // Verify no offline text on welcome screen
+    expect(find.text('Offline Mode'), findsNothing);
+    expect(find.text('100% Offline Mode • Instant Tablet Estimates'), findsNothing);
+
     await tester.tap(find.text('CALCULATE MY SAVINGS'));
     await tester.pumpAndSettle();
+
+    // Verify no offline text on user form
+    expect(find.text('100% Offline'), findsNothing);
 
     // Fill user form in portrait
     await tester.enterText(
@@ -85,5 +102,10 @@ void main() {
     expect(find.text('TELL US ABOUT YOUR HOME'), findsOneWidget);
     expect(find.text('Priya Roy'), findsWidgets);
     expect(find.text('GET MY ESTIMATE'), findsOneWidget);
+
+    // Click GET MY ESTIMATE - verify NO popup dialog appears
+    await tester.tap(find.text('GET MY ESTIMATE'));
+    await tester.pump();
+    expect(find.byType(AlertDialog), findsNothing);
   });
 }

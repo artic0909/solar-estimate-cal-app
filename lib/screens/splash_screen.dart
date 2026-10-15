@@ -23,7 +23,7 @@ class _SplashScreenState extends State<SplashScreen>
 
   Timer? _navigationTimer;
   Timer? _statusTimer;
-  String _statusText = 'Initializing Offline Engine...';
+  String _statusText = 'Initializing Solar Engine...';
 
   @override
   void initState() {
@@ -366,8 +366,8 @@ class _SplashScreenState extends State<SplashScreen>
                   runSpacing: 8,
                   children: [
                     _buildFeatureTag(
-                      icon: Icons.offline_bolt_rounded,
-                      label: '100% Offline',
+                      icon: Icons.solar_power_rounded,
+                      label: 'Solar Estimation Suite',
                     ),
                     _buildFeatureTag(
                       icon: Icons.table_chart_rounded,

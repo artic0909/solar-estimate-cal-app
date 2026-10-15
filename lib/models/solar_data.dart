@@ -32,7 +32,7 @@ class SolarData {
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
-  // Basic estimation calculations (100% offline)
+  // Solar estimation calculations
   /// Recommended system size in kW based on bill
   double get recommendedKw {
     // Average tariff in India approx Rs 7.5/unit; 1 kW produces approx 120 units/month
