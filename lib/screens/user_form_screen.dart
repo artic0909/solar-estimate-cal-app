@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/customer_info.dart';
-import '../widgets/tablet_scaffold.dart';
 import '../widgets/websol_logo.dart';
+import 'calculator_screen.dart';
 import 'welcome_screen.dart';
 
 class UserFormScreen extends StatefulWidget {
@@ -41,11 +42,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
         emailAddress: _emailController.text.trim(),
       );
 
-      // Navigate to Calculator Tablet Workspace
+      // Navigate to Single Full-Screen Calculator (No sidebar)
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation, secondaryAnimation) =>
-              TabletScaffold(customer: customer),
+              CalculatorScreen(customer: customer),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -497,20 +498,24 @@ class _UserFormScreenState extends State<UserFormScreen> {
             TextFormField(
               controller: _phoneController,
               focusNode: _phoneFocusNode,
-              keyboardType: TextInputType.phone,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(10),
+              ],
               textInputAction: TextInputAction.next,
               onFieldSubmitted: (_) => _emailFocusNode.requestFocus(),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
               decoration: _buildInputDecoration(
-                hintText: 'Enter mobile number',
+                hintText: 'Enter 10-digit mobile number',
                 prefixIcon: Icons.phone_outlined,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
                   return 'Please enter phone number';
                 }
-                if (value.trim().replaceAll(RegExp(r'\D'), '').length < 7) {
-                  return 'Please enter a valid phone number';
+                if (value.trim().length < 10) {
+                  return 'Please enter a valid 10-digit mobile number';
                 }
                 return null;
               },

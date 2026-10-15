@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/customer_info.dart';
 import '../screens/welcome_screen.dart';
+import 'calculator_form_view.dart';
 import 'websol_logo.dart';
 
 class TabletScaffold extends StatefulWidget {
@@ -142,60 +143,59 @@ class _TabletScaffoldState extends State<TabletScaffold> {
                   const SizedBox(width: 16),
                 ],
               ),
-              body: Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 800),
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(40.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(20),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.primary
-                                    .withValues(alpha: 0.08),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.calculate_rounded,
-                                size: 56,
-                                color: theme.colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              widget.customer != null
-                                  ? 'Proposal for ${widget.customer!.fullName}'
-                                  : 'Solar Calculator Workspace',
-                              style: theme.textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              widget.customer != null
-                                  ? 'Email: ${widget.customer!.emailAddress} • Phone: ${widget.customer!.phoneNumber}\nCustomer registered offline. Ready for calculation parameters.'
-                                  : 'Empty tablet-first setup configured.\nReady for your solar calculator screens and features.',
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: Colors.blueGrey.shade600,
-                                height: 1.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+              body: _selectedIndex == 0
+                  ? CalculatorFormView(
+                      customer: widget.customer ??
+                          CustomerInfo(
+                            fullName: 'Valued Client',
+                            phoneNumber: '9876543210',
+                            emailAddress: 'client@example.com',
+                          ),
+                    )
+                  : _buildPlaceholderTab(theme),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPlaceholderTab(ThemeData theme) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 600),
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.all(40.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _selectedIndex == 1
+                      ? Icons.assessment_rounded
+                      : Icons.settings_rounded,
+                  size: 56,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  _selectedIndex == 1 ? 'Saved Estimates' : 'Settings',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _selectedIndex == 1
+                      ? 'Local CSV exports and history will appear here.'
+                      : 'Application preferences and offline sync settings.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.blueGrey.shade600),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
