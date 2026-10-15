@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'websol_logo.dart';
 
 class TabletScaffold extends StatefulWidget {
   const TabletScaffold({super.key});
@@ -13,7 +14,7 @@ class _TabletScaffoldState extends State<TabletScaffold> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isTablet = MediaQuery.sizeOf(context).width >= 600;
+    final isWideTablet = MediaQuery.sizeOf(context).width >= 900;
 
     return Scaffold(
       body: Row(
@@ -26,37 +27,12 @@ class _TabletScaffoldState extends State<TabletScaffold> {
                 _selectedIndex = index;
               });
             },
-            extended: isTablet && MediaQuery.sizeOf(context).width >= 900,
+            extended: isWideTablet,
             leading: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Column(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.solar_power_rounded,
-                      color: theme.colorScheme.primary,
-                      size: 28,
-                    ),
-                  ),
-                  if (isTablet && MediaQuery.sizeOf(context).width >= 900) ...[
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Solar Calc',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+              child: isWideTablet
+                  ? const WebsolLogo(fontSize: 22, showTagline: true)
+                  : const WebsolLogo(fontSize: 16, showTagline: false),
             ),
             destinations: const [
               NavigationRailDestination(

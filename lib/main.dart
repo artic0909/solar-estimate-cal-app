@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
-import 'widgets/tablet_scaffold.dart';
 
 void main() {
   runApp(const SolarEstimateApp());
@@ -12,12 +12,12 @@ class SolarEstimateApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Solar Estimate Calculator',
+      title: 'Websol Solar Calculator',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.light,
-      home: const TabletScaffold(),
+      home: const SplashScreen(),
     );
   }
 }
