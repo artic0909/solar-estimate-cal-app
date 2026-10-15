@@ -24,8 +24,12 @@ void main() {
     expect(find.text('Think you know'), findsOneWidget);
     expect(find.text('your solar savings?'), findsOneWidget);
 
-    // 3. Section 2: Tell Us About Your Home Form
+    // 3. Section 2: Tell Us About Your Home & Customer Form
     expect(find.text('TELL US ABOUT YOUR HOME'), findsOneWidget);
+    expect(find.text('CUSTOMER DETAILS'), findsOneWidget);
+    expect(find.text('Full Name'), findsOneWidget);
+    expect(find.text('Phone Number'), findsOneWidget);
+    expect(find.text('Email ID'), findsOneWidget);
     expect(find.text('State'), findsOneWidget);
     expect(find.text('Monthly Electricity Bill (₹)'), findsOneWidget);
     expect(find.text('Property Type'), findsOneWidget);
