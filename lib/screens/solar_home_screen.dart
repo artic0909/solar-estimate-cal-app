@@ -717,38 +717,63 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               final isTwoColumn = constraints.maxWidth >= 700;
 
               if (isTwoColumn) {
-                return Row(
+                return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left Column (Property & Grid details)
-                    Expanded(
-                      flex: 5,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStateField(),
-                          const SizedBox(height: 20),
-                          _buildMonthlyBillField(),
-                          const SizedBox(height: 20),
-                          _buildPropertyTypeField(),
-                          const SizedBox(height: 20),
-                          _buildInstallationTypeField(),
-                          const SizedBox(height: 20),
-                          _buildModuleWattField(),
-                        ],
-                      ),
+                    // Top Section: Left Details & Right Appliances
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left Column (Property & Grid details)
+                        Expanded(
+                          flex: 5,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildStateField(),
+                              const SizedBox(height: 20),
+                              _buildMonthlyBillField(),
+                              const SizedBox(height: 20),
+                              _buildPropertyTypeField(),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 36),
+                        // Right Column (10 Appliances)
+                        Expanded(
+                          flex: 5,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildHouseholdAppliancesField(),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 36),
-                    // Right Column (10 Appliances & Other Load Watts)
-                    Expanded(
-                      flex: 5,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildHouseholdAppliancesField(),
-                        ],
-                      ),
+
+                    const SizedBox(height: 20),
+
+                    // Side-by-Side Row: Installation Type & Other Load (Watt) - starting & ending same!
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: _buildInstallationTypeField(),
+                        ),
+                        const SizedBox(width: 36),
+                        Expanded(
+                          flex: 5,
+                          child: _buildOtherWattsField(),
+                        ),
+                      ],
                     ),
+
+                    const SizedBox(height: 20),
+
+                    // Full-width Module Power (W)
+                    _buildModuleWattField(),
                   ],
                 );
               } else {
@@ -760,12 +785,14 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     _buildMonthlyBillField(),
                     const SizedBox(height: 18),
                     _buildPropertyTypeField(),
-                    const SizedBox(height: 22),
-                    _buildInstallationTypeField(),
-                    const SizedBox(height: 22),
-                    _buildModuleWattField(),
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 20),
                     _buildHouseholdAppliancesField(),
+                    const SizedBox(height: 20),
+                    _buildInstallationTypeField(),
+                    const SizedBox(height: 20),
+                    _buildOtherWattsField(),
+                    const SizedBox(height: 20),
+                    _buildModuleWattField(),
                   ],
                 );
               }
@@ -1076,7 +1103,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         _buildFieldTitle(icon: Icons.solar_power_outlined, title: 'Installation Type'),
         const SizedBox(height: 8),
         Container(
+          height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -1111,7 +1140,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         _buildFieldTitle(icon: Icons.electric_meter_outlined, title: 'Module Power (W)'),
         const SizedBox(height: 8),
         Container(
+          height: 48,
           padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -1310,8 +1341,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        _buildOtherWattsField(),
       ],
     );
   }
@@ -1322,28 +1351,31 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       children: [
         _buildFieldTitle(icon: Icons.bolt_rounded, title: 'Other Load (Watt)'),
         const SizedBox(height: 8),
-        TextField(
-          controller: _otherWattsController,
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          onChanged: (_) => _syncAndCalculate(),
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          decoration: InputDecoration(
-            hintText: 'e.g. 200',
-            suffixText: 'Watt',
-            suffixStyle: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF0E3B6C)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFF36A21), width: 1.5),
+        SizedBox(
+          height: 48,
+          child: TextField(
+            controller: _otherWattsController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: (_) => _syncAndCalculate(),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            decoration: InputDecoration(
+              hintText: 'e.g. 200',
+              suffixText: 'Watt',
+              suffixStyle: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF0E3B6C)),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(color: Color(0xFFF36A21), width: 1.5),
+              ),
             ),
           ),
         ),
