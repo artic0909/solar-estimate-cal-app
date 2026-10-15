@@ -95,47 +95,16 @@ class WebsolLogo extends StatelessWidget {
           ],
         ),
         if (showTagline) ...[
-          SizedBox(height: fontSize * 0.18),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 14,
-                height: 1.5,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      blueTagline.withValues(alpha: 0.8),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                "Powering Tomorrow's Energy",
-                style: TextStyle(
-                  fontSize: fontSize * 0.26,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? const Color(0xFF60A5FA) : blueTagline,
-                  letterSpacing: 1.2,
-                  fontFamily: 'sans-serif',
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 14,
-                height: 1.5,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      blueTagline.withValues(alpha: 0.8),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ],
+          SizedBox(height: fontSize * 0.14),
+          Text(
+            "Powering Tomorrow's Energy",
+            style: TextStyle(
+              fontSize: fontSize * 0.28,
+              fontWeight: FontWeight.w700,
+              color: isDark ? const Color(0xFF60A5FA) : blueTagline,
+              letterSpacing: 0.8,
+              fontFamily: 'sans-serif',
+            ),
           ),
         ],
       ],

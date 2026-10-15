@@ -5,63 +5,74 @@ class DoodleCallout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Curved arrow pointing towards the CTA button
-        CustomPaint(
-          size: const Size(42, 28),
-          painter: _CurvedArrowPainter(),
-        ),
-        const SizedBox(width: 8),
-        // Hand-styled annotation text
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        // Text with doodle burst
+        Stack(
+          clipBehavior: Clip.none,
           children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Think you know',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontStyle: FontStyle.italic,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF0F5B9E),
-                    height: 1.1,
+            Padding(
+              padding: const EdgeInsets.only(right: 18.0, top: 4.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Text(
+                    'Think you know',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F5B9E),
+                      height: 1.15,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                // Small doodle burst rays
-                CustomPaint(
-                  size: const Size(12, 12),
-                  painter: _SunburstRaysPainter(),
-                ),
-              ],
-            ),
-            Text(
-              'your solar savings?',
-              style: TextStyle(
-                fontSize: 15,
-                fontStyle: FontStyle.italic,
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFF0F5B9E),
-                height: 1.15,
+                  Text(
+                    'your solar savings?',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF0F5B9E),
+                      height: 1.15,
+                    ),
+                  ),
+                  Text(
+                    "Let's calculate!",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0F5B9E),
+                      height: 1.25,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Text(
-              "Let's calculate!",
-              style: TextStyle(
-                fontSize: 16,
-                fontStyle: FontStyle.italic,
-                fontWeight: FontWeight.w800,
-                color: const Color(0xFF0F5B9E),
-                height: 1.2,
+            // Playful burst rays at top right
+            Positioned(
+              right: 0,
+              top: 0,
+              child: CustomPaint(
+                size: const Size(16, 16),
+                painter: _SunburstRaysPainter(),
               ),
             ),
           ],
+        ),
+
+        const SizedBox(height: 6),
+
+        // Curved arrow pointing left towards the CTA button
+        Padding(
+          padding: const EdgeInsets.only(left: 12.0),
+          child: CustomPaint(
+            size: const Size(60, 26),
+            painter: _CurvedArrowPainter(),
+          ),
         ),
       ],
     );
@@ -78,29 +89,23 @@ class _CurvedArrowPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
 
     final path = Path();
-    // Starts from right (near text) curving down and pointing left towards button
-    path.moveTo(size.width, 4);
+    // Curves from right down and loops left
+    path.moveTo(size.width * 0.75, 2);
     path.quadraticBezierTo(
       size.width * 0.45,
-      2,
-      size.width * 0.25,
-      size.height * 0.55,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.1,
-      size.height * 0.9,
-      0,
-      size.height * 0.7,
+      size.height * 0.85,
+      4,
+      size.height * 0.5,
     );
 
     canvas.drawPath(path, paint);
 
-    // Arrowhead pointing left
+    // Arrowhead pointing towards left/button
     final arrowPath = Path();
-    arrowPath.moveTo(0, size.height * 0.7);
-    arrowPath.lineTo(8, size.height * 0.45);
-    arrowPath.moveTo(0, size.height * 0.7);
-    arrowPath.lineTo(8, size.height * 0.92);
+    arrowPath.moveTo(2, size.height * 0.5);
+    arrowPath.lineTo(12, size.height * 0.15);
+    arrowPath.moveTo(2, size.height * 0.5);
+    arrowPath.lineTo(10, size.height * 0.9);
 
     canvas.drawPath(arrowPath, paint);
   }
@@ -117,10 +122,10 @@ class _SunburstRaysPainter extends CustomPainter {
       ..strokeWidth = 1.8
       ..strokeCap = StrokeCap.round;
 
-    // Small decorative rays
-    canvas.drawLine(const Offset(2, 10), const Offset(0, 4), paint);
-    canvas.drawLine(const Offset(6, 11), const Offset(6, 2), paint);
-    canvas.drawLine(const Offset(10, 10), const Offset(12, 5), paint);
+    // 3 small celebratory burst rays
+    canvas.drawLine(const Offset(3, 14), const Offset(0, 7), paint);
+    canvas.drawLine(const Offset(8, 14), const Offset(8, 4), paint);
+    canvas.drawLine(const Offset(13, 13), const Offset(16, 7), paint);
   }
 
   @override

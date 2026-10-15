@@ -28,95 +28,86 @@ class WelcomeScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // 1. Right Side / Background Solar Rooftop Image with Smooth Gradient
-          Positioned.fill(
-            child: Row(
+          // 1. Right Side High-Resolution Solar Rooftop Image
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: isTabletLandscape ? size.width * 0.60 : size.width,
+            child: Stack(
+              fit: StackFit.expand,
               children: [
-                // Left spacing for text content
-                Expanded(
-                  flex: isTabletLandscape ? 45 : 0,
-                  child: Container(color: Colors.white),
+                // Clear, prominent solar panels
+                Image.asset(
+                  'assets/images/solar_panels_hero.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.centerRight,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Image.asset(
+                      'assets/images/hero_banner.png',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                    );
+                  },
                 ),
-                // Right photo section
-                Expanded(
-                  flex: isTabletLandscape ? 55 : 100,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      Image.asset(
-                        'assets/images/solar_rooftop_hero.jpg',
-                        fit: BoxFit.cover,
-                        alignment: Alignment.centerRight,
-                        errorBuilder: (context, error, stackTrace) {
-                          // Fallback to hero_banner asset if generated image fails
-                          return Image.asset(
-                            'assets/images/hero_banner.png',
-                            fit: BoxFit.cover,
-                            alignment: Alignment.centerRight,
-                          );
-                        },
-                      ),
-                      // Smooth gradient overlay so text is 100% legible
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
-                            colors: [
-                              Colors.white,
-                              Colors.white.withValues(alpha: 0.85),
-                              Colors.white.withValues(alpha: 0.15),
-                              Colors.transparent,
-                            ],
-                            stops: const [0.0, 0.25, 0.6, 1.0],
-                          ),
-                        ),
-                      ),
-                    ],
+                // Soft gradient fading smoothly on the left edge only
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Colors.white,
+                        Color(0xD9FFFFFF), // 85% white
+                        Color(0x22FFFFFF), // soft transparent
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.14, 0.32, 0.50],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          // 2. Decorative Orange Wave at Bottom Right
+          // 2. Decorative Orange Wave at Bottom Right (Matching Banner)
           Positioned(
             right: 0,
             bottom: 0,
-            width: size.width * 0.35,
+            width: size.width * 0.32,
             height: 120,
             child: CustomPaint(
               painter: _OrangeCornerWavePainter(),
             ),
           ),
 
-          // 3. Foreground Content (Logo, Headlines, CTA, Annotation)
+          // 3. Foreground Content (Logo, Headlines, CTA, Doodle)
           SafeArea(
             child: SingleChildScrollView(
               padding: EdgeInsets.symmetric(
-                horizontal: isTabletLandscape ? 48.0 : 24.0,
-                vertical: 24.0,
+                horizontal: isTabletLandscape ? 52.0 : 24.0,
+                vertical: 28.0,
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  minHeight: size.height - (MediaQuery.paddingOf(context).vertical + 48),
+                  minHeight: size.height - (MediaQuery.paddingOf(context).vertical + 56),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Top: Websol Logo
-                    const WebsolLogo(
-                      fontSize: 32,
+                    // Top: Prominent, larger Websol Logo
+                    WebsolLogo(
+                      fontSize: isTabletLandscape ? 48 : 36,
                       showTagline: true,
                     ),
 
-                    const SizedBox(height: 36),
+                    const SizedBox(height: 32),
 
-                    // Middle: Main Hero Message
+                    // Middle: Main Hero Content
                     ConstrainedBox(
                       constraints: BoxConstraints(
-                        maxWidth: isTabletLandscape ? size.width * 0.58 : double.infinity,
+                        maxWidth: isTabletLandscape ? size.width * 0.52 : double.infinity,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -125,9 +116,9 @@ class WelcomeScreen extends StatelessWidget {
                           RichText(
                             text: TextSpan(
                               style: TextStyle(
-                                fontSize: isTabletLandscape ? 48 : 34,
+                                fontSize: isTabletLandscape ? 50 : 34,
                                 fontWeight: FontWeight.w900,
-                                height: 1.1,
+                                height: 1.08,
                                 letterSpacing: 0.5,
                                 fontFamily: 'sans-serif',
                               ),
@@ -144,16 +135,16 @@ class WelcomeScreen extends StatelessWidget {
                             ),
                           ),
 
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 18),
 
                           // Subtitle
                           Text(
                             'Your Electricity Bill. Your Solar Potential. Your Savings.',
                             style: TextStyle(
-                              fontSize: isTabletLandscape ? 19 : 16,
+                              fontSize: isTabletLandscape ? 18 : 15,
                               fontWeight: FontWeight.w800,
                               color: const Color(0xFF0F5B9E),
-                              letterSpacing: 0.3,
+                              letterSpacing: 0.2,
                             ),
                           ),
 
@@ -172,10 +163,10 @@ class WelcomeScreen extends StatelessWidget {
 
                           const SizedBox(height: 32),
 
-                          // CTA Button & Playful Callout
+                          // CTA Button & Playful Annotation
                           Wrap(
                             crossAxisAlignment: WrapCrossAlignment.center,
-                            spacing: 24,
+                            spacing: 20,
                             runSpacing: 16,
                             children: [
                               // "CALCULATE MY SAVINGS ->" Button
@@ -187,34 +178,37 @@ class WelcomeScreen extends StatelessWidget {
                                   elevation: 6,
                                   shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.45),
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 32,
+                                    horizontal: 34,
                                     vertical: 20,
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(50),
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: const [
-                                    Text(
-                                      'CALCULATE MY SAVINGS',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.0,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: const [
+                                      Text(
+                                        'CALCULATE MY SAVINGS',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w900,
+                                          letterSpacing: 0.8,
+                                        ),
                                       ),
-                                    ),
-                                    SizedBox(width: 12),
-                                    Icon(
-                                      Icons.arrow_forward_rounded,
-                                      size: 22,
-                                    ),
-                                  ],
+                                      SizedBox(width: 10),
+                                      Icon(
+                                        Icons.arrow_forward_rounded,
+                                        size: 22,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
 
-                              // Playful handwritten-style callout
+                              // Playful handwritten callout
                               const DoodleCallout(),
                             ],
                           ),
