@@ -86,6 +86,10 @@ class SolarCalculatorProvider extends ChangeNotifier {
     return await LeadExcelService.shareLeadsFile();
   }
 
+  Future<String> getSavedPathDescription() async {
+    return await LeadExcelService.getPublicSavedPathDescription();
+  }
+
   void resetLeadForm() {
     _input = _input.copyWith(
       name: '',

@@ -133,19 +133,75 @@ class LeadExcelService {
 
     final encodedBytes = excel.encode();
     if (encodedBytes != null) {
+      // 1. Write to internal app docs
       await file.writeAsBytes(encodedBytes, flush: true);
+
+      // 2. On Android, copy to public Download and external storage folders so user can see it in Files/Downloads
+      if (!kIsWeb && Platform.isAndroid) {
+        try {
+          final downloadDir = Directory('/storage/emulated/0/Download');
+          if (await downloadDir.exists()) {
+            final downloadFile = File('${downloadDir.path}/$fileName');
+            await downloadFile.writeAsBytes(encodedBytes, flush: true);
+          }
+        } catch (e) {
+          debugPrint('Failed to write to public Download folder: $e');
+        }
+
+        try {
+          final extDir = await getExternalStorageDirectory();
+          if (extDir != null && await extDir.exists()) {
+            final extFile = File('${extDir.path}/$fileName');
+            await extFile.writeAsBytes(encodedBytes, flush: true);
+          }
+        } catch (e) {
+          debugPrint('Failed to write to external app folder: $e');
+        }
+
+        try {
+          final docDir = Directory('/storage/emulated/0/Documents');
+          if (await docDir.exists()) {
+            final docFile = File('${docDir.path}/$fileName');
+            await docFile.writeAsBytes(encodedBytes, flush: true);
+          }
+        } catch (e) {
+          debugPrint('Failed to write to public Documents folder: $e');
+        }
+      }
     }
 
     return file;
   }
 
+  /// User-friendly path description for UI SnackBar
+  static Future<String> getPublicSavedPathDescription() async {
+    if (!kIsWeb && Platform.isAndroid) {
+      final downloadDir = Directory('/storage/emulated/0/Download');
+      if (await downloadDir.exists()) {
+        return 'Tablet Downloads / Websol_Leads.xlsx';
+      }
+      final extDir = await getExternalStorageDirectory();
+      if (extDir != null) {
+        return '${extDir.path}/$fileName';
+      }
+    }
+    final file = await getExcelFile();
+    return file.path;
+  }
+
   /// Exports or shares the Websol_Leads.xlsx file using native sharing sheet
   static Future<bool> shareLeadsFile() async {
-    final file = await getExcelFile();
-    if (await file.exists()) {
+    File fileToShare = await getExcelFile();
+    if (!kIsWeb && Platform.isAndroid) {
+      final downloadFile = File('/storage/emulated/0/Download/$fileName');
+      if (await downloadFile.exists()) {
+        fileToShare = downloadFile;
+      }
+    }
+    if (await fileToShare.exists()) {
       await SharePlus.instance.share(
         ShareParams(
-          files: [XFile(file.path)],
+          files: [XFile(fileToShare.path)],
           subject: 'Websol Solar Leads Export',
           text: 'Attached is the Websol Leads spreadsheet from the solar calculator tablet.',
         ),

@@ -114,40 +114,25 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   Future<void> _handleSaveLead() async {
-    final name = _nameController.text.trim();
-    final mobile = _phoneController.text.trim();
-
-    if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter customer Full Name in Customer Details above.'),
-          backgroundColor: Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      _scrollToCustomerDetails();
-      return;
-    }
-
-    if (mobile.length != 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid 10-digit mobile number in Customer Details above.'),
-          backgroundColor: Color(0xFFDC2626),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      _scrollToCustomerDetails();
-      return;
-    }
+    final rawName = _nameController.text.trim();
+    final rawMobile = _phoneController.text.trim();
+    final name = rawName.isEmpty ? 'Customer' : rawName;
+    final mobile = rawMobile.isEmpty ? 'N/A' : rawMobile;
 
     final provider = context.read<SolarCalculatorProvider>();
-    provider.setInput(_buildCurrentInput(), recalculate: true);
+    final currentInput = _buildCurrentInput().copyWith(
+      name: name,
+      mobile: mobile,
+    );
+    provider.setInput(currentInput, recalculate: true);
 
     final success = await provider.saveCurrentLead();
 
     if (mounted) {
       if (success) {
+        final pathDesc = await provider.getSavedPathDescription();
+        if (!mounted) return;
+
         // Reset lead form fields as requested by spec
         setState(() {
           _nameController.clear();
@@ -158,20 +143,38 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
-              children: const [
-                Icon(Icons.check_circle_rounded, color: Colors.white, size: 24),
-                SizedBox(width: 12),
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'Result saved successfully!',
-                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Estimate saved to Excel!',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Stored in $pathDesc',
+                        style: const TextStyle(fontSize: 11, color: Colors.white70),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
             backgroundColor: const Color(0xFF16A34A),
-            duration: const Duration(seconds: 4),
+            duration: const Duration(seconds: 5),
             behavior: SnackBarBehavior.floating,
+            action: SnackBarAction(
+              label: 'SHARE / OPEN',
+              textColor: const Color(0xFFFEF08A),
+              onPressed: () {
+                provider.shareLeadsFile();
+              },
+            ),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
@@ -714,44 +717,38 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               final isTwoColumn = constraints.maxWidth >= 700;
 
               if (isTwoColumn) {
-                return Column(
+                return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Left Column (Property & Grid details)
-                        Expanded(
-                          flex: 5,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildStateField(),
-                              const SizedBox(height: 20),
-                              _buildMonthlyBillField(),
-                              const SizedBox(height: 20),
-                              _buildPropertyTypeField(),
-                              const SizedBox(height: 20),
-                              _buildInstallationTypeField(),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 36),
-                        // Right Column (10 Appliances & Other Load Watts)
-                        Expanded(
-                          flex: 5,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildHouseholdAppliancesField(),
-                            ],
-                          ),
-                        ),
-                      ],
+                    // Left Column (Property & Grid details)
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildStateField(),
+                          const SizedBox(height: 20),
+                          _buildMonthlyBillField(),
+                          const SizedBox(height: 20),
+                          _buildPropertyTypeField(),
+                          const SizedBox(height: 20),
+                          _buildInstallationTypeField(),
+                          const SizedBox(height: 20),
+                          _buildModuleWattField(),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 24),
-                    // Full-width Module Power (W) field
-                    _buildModuleWattField(),
+                    const SizedBox(width: 36),
+                    // Right Column (10 Appliances & Other Load Watts)
+                    Expanded(
+                      flex: 5,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHouseholdAppliancesField(),
+                        ],
+                      ),
+                    ),
                   ],
                 );
               } else {
@@ -766,9 +763,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     const SizedBox(height: 22),
                     _buildInstallationTypeField(),
                     const SizedBox(height: 22),
-                    _buildHouseholdAppliancesField(),
-                    const SizedBox(height: 22),
                     _buildModuleWattField(),
+                    const SizedBox(height: 22),
+                    _buildHouseholdAppliancesField(),
                   ],
                 );
               }
@@ -2111,36 +2108,85 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   Widget _buildResultsSaveCard(BuildContext context, SolarCalculatorProvider provider) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Center(
-        child: SizedBox(
-          height: 56,
-          child: ElevatedButton.icon(
-            onPressed: provider.isSavingLead ? null : _handleSaveLead,
-            icon: provider.isSavingLead
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                  )
-                : const Icon(Icons.save_rounded, size: 24),
-            label: const Text(
-              'SAVE RESULT',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.8,
+      child: Column(
+        children: [
+          Wrap(
+            alignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              SizedBox(
+                height: 54,
+                child: ElevatedButton.icon(
+                  onPressed: provider.isSavingLead ? null : _handleSaveLead,
+                  icon: provider.isSavingLead
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                        )
+                      : const Icon(Icons.save_rounded, size: 22),
+                  label: const Text(
+                    'SAVE RESULT',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF36A21),
+                    foregroundColor: Colors.white,
+                    elevation: 4,
+                    shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
+                    padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF36A21),
-              foregroundColor: Colors.white,
-              elevation: 5,
-              shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.45),
-              padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            ),
+
+              SizedBox(
+                height: 54,
+                child: OutlinedButton.icon(
+                  onPressed: () => provider.shareLeadsFile(),
+                  icon: const Icon(Icons.share_rounded, size: 20, color: Color(0xFF0E3B6C)),
+                  label: const Text(
+                    'SHARE / EXPORT EXCEL',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.6,
+                      color: Color(0xFF0E3B6C),
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              Icon(Icons.folder_open_rounded, size: 16, color: Color(0xFF64748B)),
+              SizedBox(width: 6),
+              Text(
+                'Stored directly on tablet in Downloads/Websol_Leads.xlsx',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
