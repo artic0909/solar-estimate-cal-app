@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 import '../widgets/websol_logo.dart';
 import '../widgets/doodle_arrow.dart';
 import '../widgets/qr_code_widget.dart';
+import '../core/sunhour_table.dart';
+import '../models/solar_input.dart';
+import '../models/solar_result.dart';
+import '../providers/solar_calculator_provider.dart';
 
 class SolarHomeScreen extends StatefulWidget {
   const SolarHomeScreen({super.key});
@@ -12,48 +17,46 @@ class SolarHomeScreen extends StatefulWidget {
 }
 
 class _SolarHomeScreenState extends State<SolarHomeScreen> {
-  // Customer details form state
+  // Lead / Customer details form state
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
 
-  // Input form state (defaults matching reference image)
-  String _selectedState = 'Select State';
-  final TextEditingController _billController = TextEditingController(text: '');
+  // Calculation inputs state
+  String _selectedState = 'West Bengal';
+  final TextEditingController _billController = TextEditingController(text: '5000');
   String _propertyType = 'Residential';
   String _installationType = 'Rooftop';
+  int _moduleWatt = 550;
 
-  // Appliance counts
-  int _fansCount = 0;
-  int _lightsCount = 0;
-  int _acsCount = 0;
-  int _fridgeCount = 0;
-  int _tvCount = 0;
-  int _otherCount = 0;
+  // Appliance counts (matching client spreadsheet defaults)
+  int _fansCount = 3;
+  int _lightsCount = 6;
+  int _tvCount = 2;
+  int _acsCount = 1;
+  int _washingCount = 1;
+  int _fridgeCount = 1;
+  int _kettleCount = 0;
+  int _inductionCount = 0;
+  int _pumpCount = 0;
+  int _geyserCount = 1;
+  final TextEditingController _otherWattsController = TextEditingController(text: '200');
 
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _calculatorKey = GlobalKey();
+  final GlobalKey _customerKey = GlobalKey();
+  final GlobalKey _resultsKey = GlobalKey();
+  final GlobalKey _leadKey = GlobalKey();
 
-  static const List<String> _indianStates = [
-    'Select State',
-    'Andhra Pradesh',
-    'Assam',
-    'Bihar',
-    'Delhi',
-    'Gujarat',
-    'Haryana',
-    'Karnataka',
-    'Kerala',
-    'Madhya Pradesh',
-    'Maharashtra',
-    'Odisha',
-    'Punjab',
-    'Rajasthan',
-    'Tamil Nadu',
-    'Telangana',
-    'Uttar Pradesh',
-    'West Bengal',
-  ];
+  static final List<String> _indianStates = sunhourTable.keys.toList()..sort();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncAndCalculate(notifyUI: false);
+    });
+  }
 
   @override
   void dispose() {
@@ -61,8 +64,128 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _billController.dispose();
+    _otherWattsController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  SolarInput _buildCurrentInput() {
+    final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
+    final otherW = int.tryParse(_otherWattsController.text.trim()) ?? 0;
+
+    return SolarInput(
+      name: _nameController.text.trim(),
+      mobile: _phoneController.text.trim(),
+      email: _emailController.text.trim(),
+      state: _selectedState,
+      monthlyBill: bill,
+      solarApplication: _propertyType,
+      installationType: _installationType,
+      moduleWatt: _moduleWatt,
+      counts: {
+        'fan': _fansCount,
+        'light': _lightsCount,
+        'tv': _tvCount,
+        'ac': _acsCount,
+        'washing': _washingCount,
+        'fridge': _fridgeCount,
+        'kettle': _kettleCount,
+        'induction': _inductionCount,
+        'pump': _pumpCount,
+        'geyser': _geyserCount,
+      },
+      otherWatts: otherW,
+    );
+  }
+
+  void _syncAndCalculate({bool notifyUI = true}) {
+    final provider = context.read<SolarCalculatorProvider>();
+    provider.setInput(_buildCurrentInput(), recalculate: true);
+  }
+
+  void _scrollToCustomerDetails() {
+    final ctx = _customerKey.currentContext ?? _calculatorKey.currentContext;
+    if (ctx != null) {
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  Future<void> _handleSaveLead() async {
+    final name = _nameController.text.trim();
+    final mobile = _phoneController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter customer Full Name in Customer Details above.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      _scrollToCustomerDetails();
+      return;
+    }
+
+    if (mobile.length != 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a valid 10-digit mobile number in Customer Details above.'),
+          backgroundColor: Color(0xFFDC2626),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      _scrollToCustomerDetails();
+      return;
+    }
+
+    final provider = context.read<SolarCalculatorProvider>();
+    provider.setInput(_buildCurrentInput(), recalculate: true);
+
+    final success = await provider.saveCurrentLead();
+
+    if (mounted) {
+      if (success) {
+        // Reset lead form fields as requested by spec
+        setState(() {
+          _nameController.clear();
+          _phoneController.clear();
+          _emailController.clear();
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle_rounded, color: Colors.white, size: 24),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Result saved successfully!',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF16A34A),
+            duration: const Duration(seconds: 4),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(provider.errorMessage ?? 'Failed to save result.'),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   void _scrollToCalculator() {
@@ -76,8 +199,36 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     }
   }
 
+  void _scrollToResults() {
+    final context = _resultsKey.currentContext;
+    if (context != null) {
+      Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    }
+  }
+
+  String _formatIndianCurrency(num value) {
+    final s = value.round().toString();
+    if (s.length <= 3) return s;
+    final last3 = s.substring(s.length - 3);
+    String rest = s.substring(0, s.length - 3);
+    final parts = <String>[];
+    while (rest.length > 2) {
+      parts.insert(0, rest.substring(rest.length - 2));
+      rest = rest.substring(0, rest.length - 2);
+    }
+    if (rest.isNotEmpty) parts.insert(0, rest);
+    return '${parts.join(',')},$last3';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SolarCalculatorProvider>();
+    final result = provider.result;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       body: SingleChildScrollView(
@@ -106,22 +257,33 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                           children: [
                             _buildHomeSectionHeader(),
                             const SizedBox(height: 16),
-                            _buildCustomerDetailsCard(context),
+                            Container(
+                              key: _customerKey,
+                              child: _buildCustomerDetailsCard(context),
+                            ),
                             const SizedBox(height: 20),
                             _buildCalculationCard(context),
                           ],
                         ),
                       ),
 
-                      const SizedBox(height: 32),
-
-                      // 3. Results Card ("YOUR SOLAR ESTIMATE")
-                      _buildSolarEstimateCard(context),
-
                       const SizedBox(height: 28),
 
-                      // 4. Environmental Impact Card ("YOUR IMPACT GOES BEYOND SAVINGS")
-                      _buildImpactCard(context),
+                      // 3. Results Card ("YOUR SOLAR ESTIMATE")
+                      if (result != null) ...[
+                        _buildSolarEstimateCard(context, result),
+                        const SizedBox(height: 24),
+
+                        // 4. Environmental Impact Card
+                        _buildImpactCard(context, result),
+                        const SizedBox(height: 28),
+
+                        // 5. Save Estimate Banner / Local Excel Action
+                        Container(
+                          key: _leadKey,
+                          child: _buildResultsSaveCard(context, provider),
+                        ),
+                      ],
 
                       const SizedBox(height: 32),
                     ],
@@ -130,7 +292,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               ),
             ),
 
-            // 5. Footer & Explore Solar Future Section
+            // 6. Footer & Brand Section
             _buildFooterSection(context),
           ],
         ),
@@ -149,7 +311,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       color: Colors.white,
       child: Stack(
         children: [
-          // Right Side: Solar Rooftop Photo with Sun Flare and Gradient Fade
           if (isWide)
             Positioned(
               top: 0,
@@ -171,7 +332,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       );
                     },
                   ),
-                  // Left-edge soft white gradient blend
                   Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
@@ -187,7 +347,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       ),
                     ),
                   ),
-                  // Orange wave corner accent at bottom right
                   Positioned(
                     right: 0,
                     bottom: 0,
@@ -201,7 +360,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               ),
             ),
 
-          // Foreground Hero Content
           SafeArea(
             bottom: false,
             child: Padding(
@@ -216,15 +374,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Brand Logo
-                    const WebsolLogo(
-                      fontSize: 44,
-                      showTagline: true,
-                    ),
-
+                    const WebsolLogo(fontSize: 44, showTagline: true),
                     const SizedBox(height: 28),
-
-                    // Headline
                     RichText(
                       text: const TextSpan(
                         style: TextStyle(
@@ -246,10 +397,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 14),
-
-                    // Subtitle
                     const Text(
                       'Your Electricity Bill. Your Solar Potential. Your Savings.',
                       style: TextStyle(
@@ -259,10 +407,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         letterSpacing: 0.2,
                       ),
                     ),
-
                     const SizedBox(height: 8),
-
-                    // Description
                     const Text(
                       'Discover your estimated savings with rooftop solar using our interactive Solar Calculator.',
                       style: TextStyle(
@@ -272,10 +417,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         height: 1.45,
                       ),
                     ),
-
                     const SizedBox(height: 26),
-
-                    // CTA Button & Playful Callout
                     Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 18,
@@ -288,13 +430,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                             foregroundColor: Colors.white,
                             elevation: 5,
                             shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 18,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(50),
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -315,8 +452,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         const DoodleCallout(),
                       ],
                     ),
-
-                    // Photo card fallback for narrow screens
                     if (!isWide) ...[
                       const SizedBox(height: 24),
                       ClipRRect(
@@ -353,7 +488,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // ==========================================
-  // SECTION 2A: SECTION TITLE ("TELL US ABOUT YOUR HOME")
+  // SECTION 2A: SECTION TITLE
   // ==========================================
   Widget _buildHomeSectionHeader() {
     return Container(
@@ -375,11 +510,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.home_rounded,
-              color: Colors.white,
-              size: 26,
-            ),
+            child: const Icon(Icons.home_rounded, color: Colors.white, size: 26),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -417,10 +548,10 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   // ==========================================
   Widget _buildCustomerDetailsCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
@@ -436,30 +567,45 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0E3B6C).withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.person_outline_rounded,
-                  size: 18,
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
                   color: Color(0xFF0E3B6C),
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.person_rounded, color: Colors.white, size: 22),
               ),
-              const SizedBox(width: 10),
-              const Text(
-                'CUSTOMER DETAILS',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF0E3B6C),
-                  letterSpacing: 0.6,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'CUSTOMER DETAILS',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
+                        color: Color(0xFF0E3B6C),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Enter customer contact information',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
+
+          const SizedBox(height: 22),
+
           LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= 720;
@@ -467,22 +613,22 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: _buildNameField()),
-                    const SizedBox(width: 20),
-                    Expanded(child: _buildPhoneField()),
-                    const SizedBox(width: 20),
-                    Expanded(child: _buildEmailField()),
+                    Expanded(child: _buildNameInput()),
+                    const SizedBox(width: 18),
+                    Expanded(child: _buildPhoneInput()),
+                    const SizedBox(width: 18),
+                    Expanded(child: _buildEmailInput()),
                   ],
                 );
               } else {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildNameField(),
+                    _buildNameInput(),
                     const SizedBox(height: 16),
-                    _buildPhoneField(),
+                    _buildPhoneInput(),
                     const SizedBox(height: 16),
-                    _buildEmailField(),
+                    _buildEmailInput(),
                   ],
                 );
               }
@@ -493,130 +639,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     );
   }
 
-  Widget _buildNameField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildFieldTitle(
-          icon: Icons.person_rounded,
-          title: 'Full Name',
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _nameController,
-          keyboardType: TextInputType.name,
-          textCapitalization: TextCapitalization.words,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          decoration: InputDecoration(
-            hintText: 'Enter full name',
-            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFF36A21), width: 1.5),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPhoneField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildFieldTitle(
-          icon: Icons.phone_android_outlined,
-          title: 'Phone Number',
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _phoneController,
-          keyboardType: TextInputType.phone,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(10),
-          ],
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          decoration: InputDecoration(
-            hintText: '10-digit number',
-            prefixIcon: const Padding(
-              padding: EdgeInsets.only(left: 14, right: 8),
-              child: Text(
-                '+91',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF0E3B6C),
-                ),
-              ),
-            ),
-            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFF36A21), width: 1.5),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEmailField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildFieldTitle(
-          icon: Icons.email_outlined,
-          title: 'Email ID',
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          decoration: InputDecoration(
-            hintText: 'Enter email address',
-            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFF36A21), width: 1.5),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   // ==========================================
-  // SECTION 2C: CALCULATION FORM CARD (HALF-AND-HALF)
+  // SECTION 2C: CALCULATION FORM CARD
   // ==========================================
   Widget _buildCalculationCard(BuildContext context) {
     return Container(
@@ -636,7 +660,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Two-column Form Grid
           LayoutBuilder(
             builder: (context, constraints) {
               final isTwoColumn = constraints.maxWidth >= 700;
@@ -645,7 +668,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left Column
+                    // Left Column (Property & Grid details)
                     Expanded(
                       flex: 5,
                       child: Column(
@@ -656,18 +679,20 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                           _buildMonthlyBillField(),
                           const SizedBox(height: 20),
                           _buildPropertyTypeField(),
+                          const SizedBox(height: 20),
+                          _buildInstallationTypeField(),
+                          const SizedBox(height: 20),
+                          _buildModuleWattField(),
                         ],
                       ),
                     ),
                     const SizedBox(width: 36),
-                    // Right Column
+                    // Right Column (10 Appliances & Other Load Watts)
                     Expanded(
                       flex: 5,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInstallationTypeField(),
-                          const SizedBox(height: 20),
                           _buildHouseholdAppliancesField(),
                         ],
                       ),
@@ -686,6 +711,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     const SizedBox(height: 22),
                     _buildInstallationTypeField(),
                     const SizedBox(height: 22),
+                    _buildModuleWattField(),
+                    const SizedBox(height: 22),
                     _buildHouseholdAppliancesField(),
                   ],
                 );
@@ -702,19 +729,47 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               height: 52,
               child: ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Text(
-                        'Solar estimate calculated! View your personalized results below.',
+                  final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
+                  if (bill <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Monthly electricity bill must be greater than 0.'),
+                        backgroundColor: Color(0xFFDC2626),
+                        behavior: SnackBarBehavior.floating,
                       ),
-                      backgroundColor: const Color(0xFF0E3B6C),
-                      duration: const Duration(seconds: 3),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                    );
+                    return;
+                  }
+
+                  final input = _buildCurrentInput();
+                  if (input.totalLoadWatts <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please specify at least one appliance or load.'),
+                        backgroundColor: Color(0xFFDC2626),
+                        behavior: SnackBarBehavior.floating,
                       ),
-                    ),
-                  );
+                    );
+                    return;
+                  }
+
+                  _syncAndCalculate(notifyUI: true);
+                  _scrollToResults();
+
+                  final result = context.read<SolarCalculatorProvider>().result;
+                  if (result != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Estimate calculated! ${result.modules} modules • ₹ ${_formatIndianCurrency(result.monthlySaving)} monthly savings.',
+                        ),
+                        backgroundColor: const Color(0xFF0E3B6C),
+                        duration: const Duration(seconds: 3),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF36A21),
@@ -722,9 +777,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   elevation: 5,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.45),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                 ),
                 child: const FittedBox(
                   fit: BoxFit.scaleDown,
@@ -776,10 +829,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldTitle(
-          icon: Icons.location_on_outlined,
-          title: 'State',
-        ),
+        _buildFieldTitle(icon: Icons.location_on_outlined, title: 'State/UT'),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -798,16 +848,19 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   value: state,
                   child: Text(
                     state,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 14,
-                      color: state == 'Select State' ? const Color(0xFF94A3B8) : const Color(0xFF0F172A),
-                      fontWeight: state == 'Select State' ? FontWeight.w500 : FontWeight.w600,
+                      color: Color(0xFF0F172A),
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 );
               }).toList(),
               onChanged: (val) {
-                if (val != null) setState(() => _selectedState = val);
+                if (val != null) {
+                  setState(() => _selectedState = val);
+                  _syncAndCalculate();
+                }
               },
             ),
           ),
@@ -820,17 +873,16 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldTitle(
-          icon: Icons.receipt_long_outlined,
-          title: 'Monthly Electricity Bill (₹)',
-        ),
+        _buildFieldTitle(icon: Icons.receipt_long_outlined, title: 'Monthly Electricity Bill (Rs.)'),
         const SizedBox(height: 8),
         TextField(
           controller: _billController,
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: (_) => _syncAndCalculate(),
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
-            hintText: 'Enter amount',
+            hintText: 'Enter amount (e.g. 5000)',
             hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             border: OutlineInputBorder(
@@ -855,16 +907,16 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldTitle(
-          icon: Icons.domain_rounded,
-          title: 'Property Type',
-        ),
+        _buildFieldTitle(icon: Icons.domain_rounded, title: 'Solar Application'),
         const SizedBox(height: 8),
         Row(
           children: [
             Expanded(
               child: InkWell(
-                onTap: () => setState(() => _propertyType = 'Residential'),
+                onTap: () {
+                  setState(() => _propertyType = 'Residential');
+                  _syncAndCalculate();
+                },
                 borderRadius: BorderRadius.circular(30),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -890,7 +942,10 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: InkWell(
-                onTap: () => setState(() => _propertyType = 'Commercial'),
+                onTap: () {
+                  setState(() => _propertyType = 'Commercial');
+                  _syncAndCalculate();
+                },
                 borderRadius: BorderRadius.circular(30),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -923,10 +978,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldTitle(
-          icon: Icons.solar_power_outlined,
-          title: 'Installation Type',
-        ),
+        _buildFieldTitle(icon: Icons.solar_power_outlined, title: 'Installation Type'),
         const SizedBox(height: 8),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -945,7 +997,45 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 DropdownMenuItem(value: 'Ground Mounted', child: Text('Ground Mounted', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
               ],
               onChanged: (val) {
-                if (val != null) setState(() => _installationType = val);
+                if (val != null) {
+                  setState(() => _installationType = val);
+                  _syncAndCalculate();
+                }
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModuleWattField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldTitle(icon: Icons.electric_meter_outlined, title: 'Module Power (W)'),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              value: _moduleWatt,
+              isExpanded: true,
+              icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
+              items: const [
+                DropdownMenuItem(value: 550, child: Text('550 W (Default Mono-PERC / TopCon)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                DropdownMenuItem(value: 500, child: Text('500 W (Standard)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() => _moduleWatt = val);
+                  _syncAndCalculate();
+                }
               },
             ),
           ),
@@ -970,10 +1060,10 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: 6),
             Flexible(
               child: Text(
-                '(Optional – for better accuracy)',
+                '(Counts from Solar_Calculator.xlsx)',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 11,
@@ -985,46 +1075,30 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           ],
         ),
         const SizedBox(height: 10),
-        // 2x3 Grid of appliances
+        // 5 rows x 2 columns = 10 appliances
         Row(
           children: [
             Expanded(
               child: _buildApplianceItem(
                 icon: Icons.air_rounded,
-                label: 'Fans',
+                label: 'Fan',
                 count: _fansCount,
-                onChanged: (val) => setState(() => _fansCount = val),
+                onChanged: (val) {
+                  setState(() => _fansCount = val);
+                  _syncAndCalculate();
+                },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _buildApplianceItem(
                 icon: Icons.lightbulb_outline_rounded,
-                label: 'Lights',
+                label: 'Light',
                 count: _lightsCount,
-                onChanged: (val) => setState(() => _lightsCount = val),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _buildApplianceItem(
-                icon: Icons.ac_unit_rounded,
-                label: 'ACs',
-                count: _acsCount,
-                onChanged: (val) => setState(() => _acsCount = val),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildApplianceItem(
-                icon: Icons.kitchen_rounded,
-                label: 'Refrigerator',
-                count: _fridgeCount,
-                onChanged: (val) => setState(() => _fridgeCount = val),
+                onChanged: (val) {
+                  setState(() => _lightsCount = val);
+                  _syncAndCalculate();
+                },
               ),
             ),
           ],
@@ -1037,19 +1111,146 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 icon: Icons.tv_rounded,
                 label: 'TV',
                 count: _tvCount,
-                onChanged: (val) => setState(() => _tvCount = val),
+                onChanged: (val) {
+                  setState(() => _tvCount = val);
+                  _syncAndCalculate();
+                },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _buildApplianceItem(
-                icon: Icons.power_rounded,
-                label: 'Other',
-                count: _otherCount,
-                onChanged: (val) => setState(() => _otherCount = val),
+                icon: Icons.ac_unit_rounded,
+                label: 'AC',
+                count: _acsCount,
+                onChanged: (val) {
+                  setState(() => _acsCount = val);
+                  _syncAndCalculate();
+                },
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildApplianceItem(
+                icon: Icons.local_laundry_service_outlined,
+                label: 'Washing machine',
+                count: _washingCount,
+                onChanged: (val) {
+                  setState(() => _washingCount = val);
+                  _syncAndCalculate();
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildApplianceItem(
+                icon: Icons.kitchen_rounded,
+                label: 'Fridge',
+                count: _fridgeCount,
+                onChanged: (val) {
+                  setState(() => _fridgeCount = val);
+                  _syncAndCalculate();
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildApplianceItem(
+                icon: Icons.coffee_maker_outlined,
+                label: 'Electric kettle',
+                count: _kettleCount,
+                onChanged: (val) {
+                  setState(() => _kettleCount = val);
+                  _syncAndCalculate();
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildApplianceItem(
+                icon: Icons.microwave_outlined,
+                label: 'Induction cooker',
+                count: _inductionCount,
+                onChanged: (val) {
+                  setState(() => _inductionCount = val);
+                  _syncAndCalculate();
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _buildApplianceItem(
+                icon: Icons.water_drop_outlined,
+                label: 'Submersible pump',
+                count: _pumpCount,
+                onChanged: (val) {
+                  setState(() => _pumpCount = val);
+                  _syncAndCalculate();
+                },
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildApplianceItem(
+                icon: Icons.hot_tub_rounded,
+                label: 'Geyser',
+                count: _geyserCount,
+                onChanged: (val) {
+                  setState(() => _geyserCount = val);
+                  _syncAndCalculate();
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildOtherWattsField(),
+      ],
+    );
+  }
+
+  Widget _buildOtherWattsField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldTitle(icon: Icons.bolt_rounded, title: 'Other Load (Watt)'),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _otherWattsController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          onChanged: (_) => _syncAndCalculate(),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            hintText: 'e.g. 200',
+            suffixText: 'Watt',
+            suffixStyle: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF0E3B6C)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFF36A21), width: 1.5),
+            ),
+          ),
         ),
       ],
     );
@@ -1088,7 +1289,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               value: count,
               isDense: true,
               icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF64748B)),
-              items: List.generate(11, (index) => index).map((i) {
+              items: List.generate(21, (index) => index).map((i) {
                 return DropdownMenuItem<int>(
                   value: i,
                   child: Text(
@@ -1110,8 +1311,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   // ==========================================
   // SECTION 3: YOUR SOLAR ESTIMATE RESULTS CARD
   // ==========================================
-  Widget _buildSolarEstimateCard(BuildContext context) {
+  Widget _buildSolarEstimateCard(BuildContext context, SolarResult result) {
     return Container(
+      key: _resultsKey,
       padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F6FD),
@@ -1131,11 +1333,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   color: Color(0xFFF36A21),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.wb_sunny_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: const Icon(Icons.wb_sunny_rounded, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -1166,6 +1364,35 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ],
           ),
 
+          // If Surplus, show surplus banner
+          if (result.isSurplus) ...[
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF86EFAC)),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.bolt_rounded, color: Color(0xFF15803D), size: 24),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'You are now generating Surplus Energy! You will get benefit of Surplus Amount in Next Month Bill.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF14532D),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: 24),
 
           // 5 Metric Cards (Responsive Layout)
@@ -1177,15 +1404,15 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               if (isWide) {
                 return Row(
                   children: [
-                    Expanded(child: _buildSavingsMetricCard()),
+                    Expanded(child: _buildSavingsMetricCard(result)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildBillReductionMetricCard()),
+                    Expanded(child: _buildBillReductionMetricCard(result)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildRevisedBillMetricCard()),
+                    Expanded(child: _buildRevisedBillMetricCard(result)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildInstallationCostMetricCard()),
+                    Expanded(child: _buildInstallationCostMetricCard(result)),
                     const SizedBox(width: 12),
-                    Expanded(child: _buildSubsidyMetricCard()),
+                    Expanded(child: _buildSubsidyMetricCard(result)),
                   ],
                 );
               } else if (isMedium) {
@@ -1193,19 +1420,19 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   children: [
                     Row(
                       children: [
-                        Expanded(child: _buildSavingsMetricCard()),
+                        Expanded(child: _buildSavingsMetricCard(result)),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildBillReductionMetricCard()),
+                        Expanded(child: _buildBillReductionMetricCard(result)),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildRevisedBillMetricCard()),
+                        Expanded(child: _buildRevisedBillMetricCard(result)),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Row(
                       children: [
-                        Expanded(child: _buildInstallationCostMetricCard()),
+                        Expanded(child: _buildInstallationCostMetricCard(result)),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildSubsidyMetricCard()),
+                        Expanded(child: _buildSubsidyMetricCard(result)),
                       ],
                     ),
                   ],
@@ -1213,27 +1440,90 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               } else {
                 return Column(
                   children: [
-                    _buildSavingsMetricCard(),
+                    _buildSavingsMetricCard(result),
                     const SizedBox(height: 12),
-                    _buildBillReductionMetricCard(),
+                    _buildBillReductionMetricCard(result),
                     const SizedBox(height: 12),
-                    _buildRevisedBillMetricCard(),
+                    _buildRevisedBillMetricCard(result),
                     const SizedBox(height: 12),
-                    _buildInstallationCostMetricCard(),
+                    _buildInstallationCostMetricCard(result),
                     const SizedBox(height: 12),
-                    _buildSubsidyMetricCard(),
+                    _buildSubsidyMetricCard(result),
                   ],
                 );
               }
             },
+          ),
+
+          const SizedBox(height: 18),
+
+          // Secondary System Specs Summary Pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
+            ),
+            child: Wrap(
+              alignment: WrapAlignment.spaceAround,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 20,
+              runSpacing: 10,
+              children: [
+                _buildSpecItem(
+                  icon: Icons.solar_power_rounded,
+                  label: 'Solar Modules',
+                  value: '${result.modules} Modules (${result.systemKw.toStringAsFixed(2)} kW)',
+                ),
+                _buildSpecItem(
+                  icon: Icons.crop_free_rounded,
+                  label: 'Space Required',
+                  value: '${result.spaceM2.toStringAsFixed(2)} m²',
+                ),
+                _buildSpecItem(
+                  icon: Icons.price_check_rounded,
+                  label: 'Effective Total Cost',
+                  value: 'Rs. ${_formatIndianCurrency(result.effectiveCost)}',
+                  highlight: true,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildSpecItem({
+    required IconData icon,
+    required String label,
+    required String value,
+    bool highlight = false,
+  }) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 18, color: highlight ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C)),
+        const SizedBox(width: 8),
+        Text(
+          '$label: ',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: highlight ? const Color(0xFF16A34A) : const Color(0xFF0F172A),
+          ),
+        ),
+      ],
+    );
+  }
+
   // 1. Estimated Monthly Savings
-  Widget _buildSavingsMetricCard() {
+  Widget _buildSavingsMetricCard(SolarResult result) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       decoration: BoxDecoration(
@@ -1263,9 +1553,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '₹ 3,905',
-            style: TextStyle(
+          Text(
+            '₹ ${_formatIndianCurrency(result.monthlySaving)}',
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               color: Color(0xFFEA580C),
@@ -1281,8 +1571,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     );
   }
 
-  // 2. Electricity Bill Reduction (with circular ring indicator)
-  Widget _buildBillReductionMetricCard() {
+  // 2. Electricity Bill Reduction
+  Widget _buildBillReductionMetricCard(SolarResult result) {
+    final bool isSurplus = result.isSurplus;
+    final percVal = isSurplus ? 100 : (result.billReduction! * 100.0).toStringAsFixed(1);
+    final progress = isSurplus ? 1.0 : result.billReduction!.clamp(0.0, 1.0);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       decoration: BoxDecoration(
@@ -1299,17 +1593,19 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               alignment: Alignment.center,
               children: [
                 CircularProgressIndicator(
-                  value: 0.78,
+                  value: progress,
                   strokeWidth: 4.5,
                   backgroundColor: const Color(0xFFE2E8F0),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF0F5B9E)),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0F5B9E),
+                  ),
                 ),
-                const Text(
-                  '78%',
+                Text(
+                  isSurplus ? '100%' : '$percVal%',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: isSurplus ? 10 : 11,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF0E3B6C),
+                    color: const Color(0xFF0E3B6C),
                   ),
                 ),
               ],
@@ -1317,7 +1613,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           ),
           const SizedBox(height: 10),
           const Text(
-            'Electricity Bill\nReduction',
+            'Bill\nReduction',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11,
@@ -1327,16 +1623,16 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'up to',
-            style: TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+          Text(
+            isSurplus ? 'Surplus Energy' : 'up to',
+            style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
-          const Text(
-            '78%',
+          Text(
+            isSurplus ? 'Surplus' : '$percVal%',
             style: TextStyle(
-              fontSize: 22,
+              fontSize: isSurplus ? 18 : 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0E3B6C),
+              color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C),
             ),
           ),
         ],
@@ -1345,7 +1641,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 3. Revised Monthly Electricity Bill
-  Widget _buildRevisedBillMetricCard() {
+  Widget _buildRevisedBillMetricCard(SolarResult result) {
+    final bool isSurplus = result.isSurplus;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       decoration: BoxDecoration(
@@ -1365,7 +1663,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           ),
           const SizedBox(height: 10),
           const Text(
-            'Revised Monthly\nElectricity Bill',
+            'Revised Monthly\nBill',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11,
@@ -1375,18 +1673,18 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '₹ 1,094',
+          Text(
+            isSurplus ? '₹ 0' : '₹ ${_formatIndianCurrency(result.revisedBill!)}',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Color(0xFF0F5B9E),
+              color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0F5B9E),
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'approx.',
-            style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+          Text(
+            isSurplus ? 'Surplus credited' : 'approx.',
+            style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -1394,7 +1692,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 4. Estimated Solar Installation Cost
-  Widget _buildInstallationCostMetricCard() {
+  Widget _buildInstallationCostMetricCard(SolarResult result) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       decoration: BoxDecoration(
@@ -1414,7 +1712,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           ),
           const SizedBox(height: 10),
           const Text(
-            'Estimated Solar\nInstallation Cost',
+            'Approx. Cost\nof Modules',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11,
@@ -1424,9 +1722,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '₹ 1,13,850',
-            style: TextStyle(
+          Text(
+            '₹ ${_formatIndianCurrency(result.cost)}',
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               color: Color(0xFF0E3B6C),
@@ -1443,7 +1741,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 5. Applicable Government Subsidy
-  Widget _buildSubsidyMetricCard() {
+  Widget _buildSubsidyMetricCard(SolarResult result) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
       decoration: BoxDecoration(
@@ -1463,7 +1761,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           ),
           const SizedBox(height: 10),
           const Text(
-            'Applicable\nGovernment Subsidy',
+            'Govt. Subsidy\n(PM Surya Ghar)',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 11,
@@ -1473,9 +1771,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '₹ 78,000',
-            style: TextStyle(
+          Text(
+            '₹ ${_formatIndianCurrency(result.subsidy)}',
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               color: Color(0xFF15803D),
@@ -1483,7 +1781,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           ),
           const SizedBox(height: 4),
           const Text(
-            'approx.\n(subject to eligibility)',
+            'PM Surya Ghar',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 10, color: Color(0xFF64748B), height: 1.2),
           ),
@@ -1495,7 +1793,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   // ==========================================
   // SECTION 4: ENVIRONMENTAL IMPACT CARD
   // ==========================================
-  Widget _buildImpactCard(BuildContext context) {
+  Widget _buildImpactCard(BuildContext context, SolarResult result) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       decoration: BoxDecoration(
@@ -1506,7 +1804,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with Green Leaf
           Row(
             children: [
               Container(
@@ -1535,7 +1832,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
           const SizedBox(height: 18),
 
-          // 3 Impact Metrics Row
           LayoutBuilder(
             builder: (context, constraints) {
               final isWide = constraints.maxWidth >= 600;
@@ -1548,17 +1844,17 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         icon: Icons.park_rounded,
                         isCustomIcon: false,
                         label: 'Equivalent Trees Planted',
-                        value: '3.63',
-                        unit: 'per year',
+                        value: result.trees.round().toString(),
+                        unit: 'trees per year',
                       ),
                     ),
                     Container(width: 1, height: 48, color: const Color(0xFFBBF7D0)),
                     Expanded(
                       child: _buildImpactMetric(
                         icon: Icons.cloud_outlined,
-                        isCustomIcon: true, // CO2 badge
+                        isCustomIcon: true,
                         label: 'Annual CO₂ Emissions\nReduction',
-                        value: '4.45',
+                        value: result.co2MT.toStringAsFixed(2),
                         unit: 'MT per year',
                       ),
                     ),
@@ -1568,8 +1864,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         icon: Icons.landscape_rounded,
                         isCustomIcon: false,
                         label: 'Annual Coal Savings',
-                        value: '202',
-                        unit: 'kg per year',
+                        value: result.coalMT.toStringAsFixed(2),
+                        unit: 'MT per year',
                       ),
                     ),
                   ],
@@ -1581,15 +1877,15 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       icon: Icons.park_rounded,
                       isCustomIcon: false,
                       label: 'Equivalent Trees Planted',
-                      value: '3.63',
-                      unit: 'per year',
+                      value: result.trees.round().toString(),
+                      unit: 'trees per year',
                     ),
                     const Divider(color: Color(0xFFBBF7D0)),
                     _buildImpactMetric(
                       icon: Icons.cloud_outlined,
                       isCustomIcon: true,
                       label: 'Annual CO₂ Emissions Reduction',
-                      value: '4.45',
+                      value: result.co2MT.toStringAsFixed(2),
                       unit: 'MT per year',
                     ),
                     const Divider(color: Color(0xFFBBF7D0)),
@@ -1597,8 +1893,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       icon: Icons.landscape_rounded,
                       isCustomIcon: false,
                       label: 'Annual Coal Savings',
-                      value: '202',
-                      unit: 'kg per year',
+                      value: result.coalMT.toStringAsFixed(2),
+                      unit: 'MT per year',
                     ),
                   ],
                 );
@@ -1622,7 +1918,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Icon
           if (isCustomIcon)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
@@ -1651,8 +1946,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               children: [
                 Text(
                   label,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
@@ -1665,13 +1958,14 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   fit: BoxFit.scaleDown,
                   alignment: Alignment.centerLeft,
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
                         value,
                         style: const TextStyle(
-                          fontSize: 22,
+                          fontSize: 24,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF14532D),
                         ),
@@ -1680,8 +1974,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       Text(
                         unit,
                         style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
                           color: Color(0xFF15803D),
                         ),
                       ),
@@ -1697,226 +1991,302 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // ==========================================
-  // SECTION 5: FOOTER CTA & BRAND BANNER
+  // SECTION 5: SAVE RESULT BUTTON (BELOW ESTIMATE RESULTS)
+  // ==========================================
+  Widget _buildResultsSaveCard(BuildContext context, SolarCalculatorProvider provider) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10.0),
+      child: Center(
+        child: SizedBox(
+          height: 56,
+          child: ElevatedButton.icon(
+            onPressed: provider.isSavingLead ? null : _handleSaveLead,
+            icon: provider.isSavingLead
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                  )
+                : const Icon(Icons.save_rounded, size: 24),
+            label: const Text(
+              'SAVE RESULT',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0.8,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFF36A21),
+              foregroundColor: Colors.white,
+              elevation: 5,
+              shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.45),
+              padding: const EdgeInsets.symmetric(horizontal: 52, vertical: 14),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNameInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldTitle(icon: Icons.person_rounded, title: 'Full Name *'),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _nameController,
+          keyboardType: TextInputType.name,
+          textCapitalization: TextCapitalization.words,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            hintText: 'Enter full name',
+            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF0E3B6C), width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhoneInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldTitle(icon: Icons.phone_android_outlined, title: 'Phone Number (10 digits) *'),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _phoneController,
+          keyboardType: TextInputType.phone,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(10),
+          ],
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            hintText: '10-digit number',
+            prefixIcon: const Padding(
+              padding: EdgeInsets.only(left: 14, right: 8),
+              child: Text(
+                '+91',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF0E3B6C),
+                ),
+              ),
+            ),
+            prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
+            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF0E3B6C), width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmailInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFieldTitle(icon: Icons.email_outlined, title: 'Email ID (Optional)'),
+        const SizedBox(height: 8),
+        TextField(
+          controller: _emailController,
+          keyboardType: TextInputType.emailAddress,
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          decoration: InputDecoration(
+            hintText: 'Enter email address',
+            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: const BorderSide(color: Color(0xFF0E3B6C), width: 1.5),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ==========================================
+  // SECTION 6: FOOTER & BRAND
   // ==========================================
   Widget _buildFooterSection(BuildContext context) {
     return Container(
       color: Colors.white,
       child: Column(
         children: [
-          // Upper Footer with Skyline Silhouette, Text, and QR Code
-          Stack(
-            children: [
-              // Rooftop solar skyline silhouette along bottom left
-              Positioned(
-                left: 0,
-                bottom: 0,
-                width: 320,
-                height: 90,
-                child: Opacity(
-                  opacity: 0.18,
-                  child: Image.asset(
-                    'assets/images/solar_panels_hero.jpg',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.bottomLeft,
-                    errorBuilder: (context, error, stackTrace) => const SizedBox(),
-                  ),
-                ),
-              ),
-
-              // Orange corner wave on bottom right
-              Positioned(
-                right: 0,
-                bottom: 0,
-                width: 220,
-                height: 80,
-                child: CustomPaint(
-                  painter: _OrangeCornerWavePainter(),
-                ),
-              ),
-
-              // Foreground content
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 30),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1000),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth >= 650;
-
-                        if (isWide) {
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Left Text
-                              Expanded(
-                                flex: 6,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
-                                    Text(
-                                      'READY TO EXPLORE\nYOUR SOLAR FUTURE?',
-                                      style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w900,
-                                        color: Color(0xFF0E3B6C),
-                                        height: 1.15,
-                                      ),
-                                    ),
-                                    SizedBox(height: 6),
-                                    Text(
-                                      "Powering Tomorrow's Energy",
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFFF36A21),
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      'Discover how Websol can help power a more sustainable tomorrow.',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Color(0xFF64748B),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-
-                              // Vertical Divider
-                              Container(
-                                height: 75,
-                                width: 2,
-                                color: const Color(0xFFF59E0B),
-                                margin: const EdgeInsets.symmetric(horizontal: 28),
-                              ),
-
-                              // Right QR Code & Text
-                              Row(
-                                children: const [
-                                  WebsolQrCode(size: 82),
-                                  SizedBox(width: 14),
-                                  SizedBox(
-                                    width: 160,
-                                    child: Text(
-                                      'Scan the QR code to connect with Websol',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0E3B6C),
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        } else {
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'READY TO EXPLORE\nYOUR SOLAR FUTURE?',
-                                style: TextStyle(
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w900,
-                                  color: Color(0xFF0E3B6C),
-                                  height: 1.15,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              const Text(
-                                "Powering Tomorrow's Energy",
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFFF36A21),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Discover how Websol can help power a more sustainable tomorrow.',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFF64748B),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              Row(
-                                children: const [
-                                  WebsolQrCode(size: 78),
-                                  SizedBox(width: 14),
-                                  Expanded(
-                                    child: Text(
-                                      'Scan the QR code to connect with Websol',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: Color(0xFF0E3B6C),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        }
-                      },
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // Bottom-most Deep Navy Bar
           Container(
-            width: double.infinity,
-            color: const Color(0xFF091E36),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            alignment: Alignment.center,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(width: 32, height: 1, color: const Color(0xFF38BDF8)),
-                const SizedBox(width: 12),
-                const Text(
-                  'CLEANER ENERGY',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 2.0,
-                  ),
+            height: 1,
+            color: const Color(0xFFE2E8F0),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1100),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final isWide = constraints.maxWidth >= 750;
+
+                    if (isWide) {
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Expanded(child: _buildFooterLeftContent()),
+                          const SizedBox(width: 32),
+                          _buildFooterQrCard(),
+                        ],
+                      );
+                    } else {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildFooterLeftContent(),
+                          const SizedBox(height: 24),
+                          Center(child: _buildFooterQrCard()),
+                        ],
+                      );
+                    }
+                  },
                 ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 14),
-                  child: Text(
-                    '|',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ),
-                ),
-                const Text(
-                  'GREENER TOMORROW',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 2.0,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(width: 32, height: 1, color: const Color(0xFF38BDF8)),
-              ],
+              ),
+            ),
+          ),
+          _buildBrandStrip(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooterLeftContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: const [
+        Text(
+          'READY TO EXPLORE\nYOUR SOLAR FUTURE?',
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF0E3B6C),
+            height: 1.15,
+            letterSpacing: 0.5,
+          ),
+        ),
+        SizedBox(height: 8),
+        Text(
+          'Powering Tomorrow’s Energy',
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFFF36A21),
+            letterSpacing: 0.2,
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          'Discover how Websol can help power a more sustainable tomorrow.',
+          style: TextStyle(
+            fontSize: 13,
+            color: Color(0xFF64748B),
+            height: 1.45,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooterQrCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          WebsolQrCode(
+            size: 64,
+          ),
+          SizedBox(width: 14),
+          Text(
+            'Scan the QR code to connect with Websol',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF0E3B6C),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBrandStrip() {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF0E3B6C),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Text(
+            'CLEANER ENERGY',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Icon(Icons.circle, size: 6, color: Color(0xFFF36A21)),
+          ),
+          Text(
+            'GREENER TOMORROW',
+            style: TextStyle(
+              color: Color(0xFFF36A21),
+              fontSize: 13,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
             ),
           ),
         ],
@@ -1925,7 +2295,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 }
 
-/// Painter for the orange wave corner accent
 class _OrangeCornerWavePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -1936,14 +2305,14 @@ class _OrangeCornerWavePainter extends CustomPainter {
     final path = Path();
     path.moveTo(0, size.height);
     path.quadraticBezierTo(
-      size.width * 0.4,
-      size.height * 0.7,
-      size.width * 0.7,
-      size.height * 0.25,
+      size.width * 0.45,
+      size.height * 0.95,
+      size.width * 0.65,
+      size.height * 0.55,
     );
     path.quadraticBezierTo(
       size.width * 0.85,
-      0,
+      size.height * 0.15,
       size.width,
       0,
     );

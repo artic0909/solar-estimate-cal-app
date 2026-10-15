@@ -24,41 +24,48 @@ void main() {
     expect(find.text('Think you know'), findsOneWidget);
     expect(find.text('your solar savings?'), findsOneWidget);
 
-    // 3. Section 2: Tell Us About Your Home & Customer Form
+    // 3. Section 2: Tell Us About Your Home
     expect(find.text('TELL US ABOUT YOUR HOME'), findsOneWidget);
-    expect(find.text('CUSTOMER DETAILS'), findsOneWidget);
-    expect(find.text('Full Name'), findsOneWidget);
-    expect(find.text('Phone Number'), findsOneWidget);
-    expect(find.text('Email ID'), findsOneWidget);
-    expect(find.text('State'), findsOneWidget);
-    expect(find.text('Monthly Electricity Bill (₹)'), findsOneWidget);
-    expect(find.text('Property Type'), findsOneWidget);
+    expect(find.text('State/UT'), findsOneWidget);
+    expect(find.text('Monthly Electricity Bill (Rs.)'), findsOneWidget);
+    expect(find.text('Solar Application'), findsOneWidget);
     expect(find.text('Residential'), findsOneWidget);
     expect(find.text('Commercial'), findsOneWidget);
     expect(find.text('Installation Type'), findsOneWidget);
     expect(find.text('Household Appliances'), findsOneWidget);
-    expect(find.text('Fans'), findsOneWidget);
-    expect(find.text('Lights'), findsOneWidget);
-    expect(find.text('ACs'), findsOneWidget);
-    expect(find.text('Refrigerator'), findsOneWidget);
-    expect(find.text('TV'), findsOneWidget);
-    expect(find.text('Other'), findsOneWidget);
+    expect(find.text('Fan'), findsWidgets);
+    expect(find.text('Light'), findsWidgets);
+    expect(find.text('TV'), findsWidgets);
+    expect(find.text('AC'), findsWidgets);
+    expect(find.text('Washing machine'), findsWidgets);
+    expect(find.text('Fridge'), findsWidgets);
+    expect(find.text('Electric kettle'), findsWidgets);
+    expect(find.text('Induction cooker'), findsWidgets);
+    expect(find.text('Submersible pump'), findsWidgets);
+    expect(find.text('Geyser'), findsWidgets);
     expect(find.text('GET MY ESTIMATE'), findsOneWidget);
 
     // 4. Section 3: Solar Estimate Metrics
     expect(find.text('YOUR SOLAR ESTIMATE'), findsOneWidget);
-    expect(find.text('₹ 3,905'), findsOneWidget);
-    expect(find.text('₹ 1,094'), findsOneWidget);
-    expect(find.text('₹ 1,13,850'), findsOneWidget);
-    expect(find.text('₹ 78,000'), findsOneWidget);
+    expect(find.text('₹ 3,905'), findsWidgets);
+    expect(find.text('₹ 1,095'), findsWidgets);
+    expect(find.text('₹ 1,13,850'), findsWidgets);
+    expect(find.text('₹ 78,000'), findsWidgets);
 
     // 5. Section 4: Environmental Impact
     expect(find.text('YOUR IMPACT GOES BEYOND SAVINGS'), findsOneWidget);
-    expect(find.text('3.63'), findsOneWidget);
-    expect(find.text('4.45'), findsOneWidget);
-    expect(find.text('202'), findsOneWidget);
+    expect(find.text('3.63'), findsWidgets);
+    expect(find.text('4.45'), findsWidgets);
+    expect(find.text('202'), findsWidgets);
 
-    // 6. Section 5: Footer & Brand
+    // 6. Customer Details Form (Full Name, Phone Number, Email)
+    expect(find.text('CUSTOMER DETAILS'), findsOneWidget);
+    expect(find.text('Full Name *'), findsOneWidget);
+    expect(find.text('Phone Number (10 digits) *'), findsOneWidget);
+    expect(find.text('Email ID (Optional)'), findsOneWidget);
+    expect(find.text('SAVE RESULT'), findsOneWidget);
+
+    // 7. Section 5: Footer & Brand
     expect(find.text('READY TO EXPLORE\nYOUR SOLAR FUTURE?'), findsOneWidget);
     expect(find.text('Scan the QR code to connect with Websol'), findsOneWidget);
     expect(find.text('CLEANER ENERGY'), findsOneWidget);
