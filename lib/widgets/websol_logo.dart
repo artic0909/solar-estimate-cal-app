@@ -54,46 +54,11 @@ class WebsolLogo extends StatelessWidget {
       ],
     );
 
-    // Elevated stylized 'O' matching Websol's brand mark
-    final oSize = fontSize * 0.54;
-
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('WEBS', style: titleStyle),
-            Padding(
-              padding: EdgeInsets.only(
-                top: fontSize * 0.03,
-                left: fontSize * 0.03,
-                right: fontSize * 0.03,
-              ),
-              child: Container(
-                width: oSize,
-                height: oSize,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: orangePrimary,
-                    width: oSize * 0.28,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: orangePrimary.withValues(alpha: 0.3),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Text('L', style: titleStyle),
-          ],
-        ),
+        Text('WEBSOL', style: titleStyle),
         if (showTagline) ...[
           SizedBox(height: fontSize * 0.14),
           Text(

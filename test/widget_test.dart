@@ -13,7 +13,7 @@ void main() {
     await tester.pumpWidget(const SolarEstimateApp());
 
     // 1. Splash Screen
-    expect(find.text('WEBS'), findsOneWidget);
+    expect(find.text('WEBSOL'), findsOneWidget);
     expect(find.text('Solar Estimation Suite'), findsOneWidget);
 
     // Settle splash timer
