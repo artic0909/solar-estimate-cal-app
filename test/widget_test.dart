@@ -72,8 +72,9 @@ void main() {
     expect(find.text('CUSTOMER DETAILS'), findsOneWidget);
     expect(find.text('Full Name *'), findsOneWidget);
     expect(find.text('Phone Number (10 digits) *'), findsOneWidget);
-    expect(find.text('Email ID (Optional)'), findsOneWidget);
+    expect(find.text('Email ID *'), findsOneWidget);
     expect(find.text('SAVE RESULT'), findsOneWidget);
+    expect(find.text('SHARE / EXPORT EXCEL'), findsNothing);
 
     // 7. Section 5: Footer & Brand
     expect(find.text('READY TO EXPLORE\nYOUR SOLAR FUTURE?'), findsOneWidget);
@@ -119,9 +120,37 @@ void main() {
     expect(find.text('CUSTOMER DETAILS'), findsOneWidget);
     expect(find.text('Full Name *'), findsOneWidget);
     expect(find.text('Phone Number (10 digits) *'), findsOneWidget);
-    expect(find.text('Email ID (Optional)'), findsOneWidget);
+    expect(find.text('Email ID *'), findsOneWidget);
+    expect(find.text('SHARE / EXPORT EXCEL'), findsNothing);
 
     expect(find.text('READY TO EXPLORE\nYOUR SOLAR FUTURE?'), findsOneWidget);
     expect(find.text('Scan the QR code to connect with Websol'), findsOneWidget);
+  });
+
+  testWidgets('Validation: without name, phone, and email, data never saves and shows alert in top right',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const SolarEstimateApp());
+    await tester.pumpAndSettle(const Duration(seconds: 4));
+
+    // Calculate estimate first
+    await tester.ensureVisible(find.text('GET MY ESTIMATE'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('GET MY ESTIMATE'));
+    await tester.pumpAndSettle();
+
+    // Tap SAVE RESULT without entering customer info
+    await tester.ensureVisible(find.text('SAVE RESULT'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('SAVE RESULT'));
+    await tester.pumpAndSettle();
+
+    // Verify error alert is shown
+    expect(find.text('Customer Name Required'), findsOneWidget);
+    expect(find.text("Please enter the customer's full name."), findsOneWidget);
   });
 }

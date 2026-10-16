@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../widgets/websol_logo.dart';
 import '../widgets/doodle_arrow.dart';
 import '../widgets/qr_code_widget.dart';
+import '../widgets/top_alert.dart';
 import '../core/sunhour_table.dart';
 import '../models/solar_input.dart';
 import '../models/solar_result.dart';
@@ -59,6 +60,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
   @override
   void dispose() {
+    TopAlert.dismiss();
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -116,13 +118,83 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   Future<void> _handleSaveLead() async {
     final rawName = _nameController.text.trim();
     final rawMobile = _phoneController.text.trim();
-    final name = rawName.isEmpty ? 'Customer' : rawName;
-    final mobile = rawMobile.isEmpty ? 'N/A' : rawMobile;
+    final rawEmail = _emailController.text.trim();
 
+    // 1. Check if user calculated estimate first
     final provider = context.read<SolarCalculatorProvider>();
+    if (!_hasCalculated || provider.result == null) {
+      TopAlert.show(
+        context,
+        title: 'Estimate Not Calculated',
+        message: 'Please click "GET MY ESTIMATE" first before saving.',
+        type: TopAlertType.warning,
+      );
+      _scrollToCalculator();
+      return;
+    }
+
+    // 2. Validate Customer Name
+    if (rawName.isEmpty) {
+      TopAlert.show(
+        context,
+        title: 'Customer Name Required',
+        message: 'Please enter the customer\'s full name.',
+        type: TopAlertType.error,
+      );
+      _scrollToCustomerDetails();
+      return;
+    }
+
+    // 3. Validate Phone Number (10 digits)
+    if (rawMobile.isEmpty) {
+      TopAlert.show(
+        context,
+        title: 'Phone Number Required',
+        message: 'Please enter customer 10-digit mobile number.',
+        type: TopAlertType.error,
+      );
+      _scrollToCustomerDetails();
+      return;
+    }
+    if (rawMobile.length != 10) {
+      TopAlert.show(
+        context,
+        title: 'Invalid Mobile Number',
+        message: 'Mobile number must be exactly 10 digits.',
+        type: TopAlertType.error,
+      );
+      _scrollToCustomerDetails();
+      return;
+    }
+
+    // 4. Validate Email Address
+    if (rawEmail.isEmpty) {
+      TopAlert.show(
+        context,
+        title: 'Email Address Required',
+        message: 'Please enter customer email address.',
+        type: TopAlertType.error,
+      );
+      _scrollToCustomerDetails();
+      return;
+    }
+    final emailPattern = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailPattern.hasMatch(rawEmail)) {
+      TopAlert.show(
+        context,
+        title: 'Invalid Email Address',
+        message: 'Please enter a valid email address (e.g. name@domain.com).',
+        type: TopAlertType.error,
+      );
+      _scrollToCustomerDetails();
+      return;
+    }
+
+    // Set input with strictly validated customer details
     final currentInput = _buildCurrentInput().copyWith(
-      name: name,
-      mobile: mobile,
+      name: rawName,
+      mobile: rawMobile,
+      email: rawEmail,
     );
     provider.setInput(currentInput, recalculate: true);
 
@@ -130,61 +202,25 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
     if (mounted) {
       if (success) {
-        final pathDesc = await provider.getSavedPathDescription();
-        if (!mounted) return;
-
-        // Reset lead form fields as requested by spec
+        // Reset lead form fields as requested
         setState(() {
           _nameController.clear();
           _phoneController.clear();
           _emailController.clear();
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.check_circle_rounded, color: Colors.white, size: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Estimate saved to Excel!',
-                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'Stored in $pathDesc',
-                        style: const TextStyle(fontSize: 11, color: Colors.white70),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFF16A34A),
-            duration: const Duration(seconds: 5),
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'SHARE / OPEN',
-              textColor: const Color(0xFFFEF08A),
-              onPressed: () {
-                provider.shareLeadsFile();
-              },
-            ),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
+        TopAlert.show(
+          context,
+          title: 'Saved Successfully',
+          message: 'Estimate saved directly to Downloads/Websol_Leads.xlsx',
+          type: TopAlertType.success,
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(provider.errorMessage ?? 'Failed to save result.'),
-            backgroundColor: const Color(0xFFDC2626),
-            behavior: SnackBarBehavior.floating,
-          ),
+        TopAlert.show(
+          context,
+          title: 'Save Failed',
+          message: provider.errorMessage ?? 'Failed to save result to Excel file.',
+          type: TopAlertType.error,
         );
       }
     }
@@ -216,23 +252,11 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
     context.read<SolarCalculatorProvider>().clearAll();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: const [
-            Icon(Icons.cleaning_services_rounded, color: Colors.white, size: 22),
-            SizedBox(width: 10),
-            Text(
-              'Form cleared successfully.',
-              style: TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF475569),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
+    TopAlert.show(
+      context,
+      title: 'Form Reset',
+      message: 'All calculator and customer details have been reset.',
+      type: TopAlertType.info,
     );
 
     _scrollToCustomerDetails();
@@ -803,24 +827,22 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     onPressed: () {
                       final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
                       if (bill <= 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Monthly electricity bill must be greater than 0.'),
-                            backgroundColor: Color(0xFFDC2626),
-                            behavior: SnackBarBehavior.floating,
-                          ),
+                        TopAlert.show(
+                          context,
+                          title: 'Invalid Electricity Bill',
+                          message: 'Monthly electricity bill must be greater than 0.',
+                          type: TopAlertType.error,
                         );
                         return;
                       }
 
                       final input = _buildCurrentInput();
                       if (input.totalLoadWatts <= 0) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Please specify at least one appliance or load.'),
-                            backgroundColor: Color(0xFFDC2626),
-                            behavior: SnackBarBehavior.floating,
-                          ),
+                        TopAlert.show(
+                          context,
+                          title: 'Appliances Required',
+                          message: 'Please specify at least one appliance or load.',
+                          type: TopAlertType.error,
                         );
                         return;
                       }
@@ -833,16 +855,11 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
                       final result = context.read<SolarCalculatorProvider>().result;
                       if (result != null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Estimate calculated! ${result.modules} modules • ₹ ${_formatIndianCurrency(result.monthlySaving)} monthly savings.',
-                            ),
-                            backgroundColor: const Color(0xFF0E3B6C),
-                            duration: const Duration(seconds: 3),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
+                        TopAlert.show(
+                          context,
+                          title: 'Estimate Calculated',
+                          message: '${result.modules} modules • ₹ ${_formatIndianCurrency(result.monthlySaving)} estimated monthly savings.',
+                          type: TopAlertType.success,
                         );
                       }
                     },
@@ -2127,65 +2144,36 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       padding: const EdgeInsets.symmetric(vertical: 10.0),
       child: Column(
         children: [
-          Wrap(
-            alignment: WrapAlignment.center,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 12,
-            children: [
-              SizedBox(
-                height: 52,
-                child: ElevatedButton.icon(
-                  onPressed: provider.isSavingLead ? null : _handleSaveLead,
-                  icon: provider.isSavingLead
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                        )
-                      : const Icon(Icons.save_rounded, size: 20),
-                  label: const Text(
-                    'SAVE RESULT',
-                    style: TextStyle(
-                      fontSize: 13.5,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.8,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF36A21),
-                    foregroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          Center(
+            child: SizedBox(
+              height: 52,
+              child: ElevatedButton.icon(
+                onPressed: provider.isSavingLead ? null : _handleSaveLead,
+                icon: provider.isSavingLead
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
+                      )
+                    : const Icon(Icons.save_rounded, size: 20),
+                label: const Text(
+                  'SAVE RESULT',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.8,
                   ),
                 ),
-              ),
-
-              SizedBox(
-                height: 52,
-                child: OutlinedButton.icon(
-                  onPressed: () => provider.shareLeadsFile(),
-                  icon: const Icon(Icons.share_rounded, size: 18, color: Color(0xFF0E3B6C)),
-                  label: const Text(
-                    'SHARE / EXPORT EXCEL',
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: Color(0xFF0E3B6C),
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
-                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF36A21),
+                  foregroundColor: Colors.white,
+                  elevation: 4,
+                  shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
+                  padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 ),
               ),
-            ],
+            ),
           ),
           const SizedBox(height: 10),
           Row(
@@ -2293,7 +2281,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldTitle(icon: Icons.email_outlined, title: 'Email ID (Optional)'),
+        _buildFieldTitle(icon: Icons.email_outlined, title: 'Email ID *'),
         const SizedBox(height: 8),
         TextField(
           controller: _emailController,
