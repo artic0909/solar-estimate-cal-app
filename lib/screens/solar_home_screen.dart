@@ -280,6 +280,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<SolarCalculatorProvider>();
     final result = provider.result;
+    final size = MediaQuery.sizeOf(context);
+    final isPortrait = size.height > size.width || size.width < 900;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -289,7 +291,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Top Hero Section
-            _buildHeroSection(context),
+            _buildHeroSection(context, isPortrait: isPortrait),
 
             // Main Content Area with max constraint for clean tablet layout
             Center(
@@ -299,7 +301,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(
                     children: [
-                      const SizedBox(height: 24),
+                      SizedBox(height: isPortrait ? 16 : 24),
 
                       // 2. TELL US ABOUT YOUR HOME Section
                       Container(
@@ -355,9 +357,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   // ==========================================
   // SECTION 1: TOP HERO SECTION
   // ==========================================
-  Widget _buildHeroSection(BuildContext context) {
+  Widget _buildHeroSection(BuildContext context, {bool isPortrait = false}) {
     final size = MediaQuery.sizeOf(context);
-    final isCompact = size.width < 700;
 
     return Container(
       color: Colors.white,
@@ -369,7 +370,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             top: 0,
             bottom: 0,
             right: 0,
-            width: size.width * (isCompact ? 0.50 : 0.58),
+            width: size.width * (isPortrait ? 0.52 : 0.58),
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -392,19 +393,19 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       end: Alignment.centerRight,
                       colors: [
                         Colors.white,
-                        Color(0xD9FFFFFF),
-                        Color(0x22FFFFFF),
+                        Color(0xF0FFFFFF),
+                        Color(0x33FFFFFF),
                         Colors.transparent,
                       ],
-                      stops: [0.0, 0.16, 0.38, 0.60],
+                      stops: [0.0, 0.16, 0.40, 0.65],
                     ),
                   ),
                 ),
                 Positioned(
                   right: 0,
                   bottom: 0,
-                  width: size.width * (isCompact ? 0.22 : 0.28),
-                  height: isCompact ? 70 : 100,
+                  width: size.width * (isPortrait ? 0.22 : 0.28),
+                  height: isPortrait ? 65 : 100,
                   child: CustomPaint(
                     painter: _OrangeCornerWavePainter(),
                   ),
@@ -417,24 +418,24 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             bottom: false,
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: isCompact ? 24.0 : 44.0,
-                vertical: 24.0,
+                horizontal: isPortrait ? 24.0 : 44.0,
+                vertical: isPortrait ? 14.0 : 24.0,
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: size.width * (isCompact ? 0.62 : 0.50),
+                  maxWidth: size.width * (isPortrait ? 0.58 : 0.50),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    WebsolLogo(fontSize: isCompact ? 36 : 44, showTagline: true),
-                    SizedBox(height: isCompact ? 20 : 28),
+                    WebsolLogo(fontSize: isPortrait ? 32 : 44, showTagline: true),
+                    SizedBox(height: isPortrait ? 10 : 26),
                     RichText(
                       text: TextSpan(
                         style: TextStyle(
-                          fontSize: isCompact ? 30 : (size.width < 900 ? 34 : 40),
+                          fontSize: isPortrait ? 27 : (size.width < 900 ? 34 : 40),
                           fontWeight: FontWeight.w900,
-                          height: 1.1,
+                          height: 1.08,
                           letterSpacing: 0.5,
                           fontFamily: 'sans-serif',
                         ),
@@ -450,60 +451,68 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    const Text(
+                    SizedBox(height: isPortrait ? 8 : 14),
+                    Text(
                       'Your Electricity Bill. Your Solar Potential. Your Savings.',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: isPortrait ? 13 : 16,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F5B9E),
+                        color: const Color(0xFF0F5B9E),
                         letterSpacing: 0.2,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: isPortrait ? 4 : 8),
+                    Text(
                       'Discover your estimated savings with rooftop solar using our interactive Solar Calculator.',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: isPortrait ? 12 : 14,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF475569),
-                        height: 1.45,
+                        color: const Color(0xFF475569),
+                        height: 1.35,
                       ),
                     ),
-                    const SizedBox(height: 26),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 18,
-                      runSpacing: 14,
-                      children: [
-                        ElevatedButton(
-                          onPressed: _scrollToCalculator,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFF36A21),
-                            foregroundColor: Colors.white,
-                            elevation: 5,
-                            shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
-                            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'CALCULATE MY SAVINGS',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 0.8,
-                                ),
+                    SizedBox(height: isPortrait ? 14 : 24),
+                    // Non-wrapping Row so DoodleCallout stays right beside the button in one sleek line
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: _scrollToCalculator,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFF36A21),
+                              foregroundColor: Colors.white,
+                              elevation: 4,
+                              shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isPortrait ? 18 : 28,
+                                vertical: isPortrait ? 12 : 18,
                               ),
-                              SizedBox(width: 8),
-                              Icon(Icons.arrow_forward_rounded, size: 20),
-                            ],
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'CALCULATE MY SAVINGS',
+                                  style: TextStyle(
+                                    fontSize: isPortrait ? 12.5 : 15,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 0.7,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_rounded, size: isPortrait ? 18 : 20),
+                              ],
+                            ),
                           ),
-                        ),
-                        const DoodleCallout(),
-                      ],
+                          SizedBox(width: isPortrait ? 10 : 18),
+                          DoodleCallout(compact: isPortrait),
+                        ],
+                      ),
                     ),
                   ],
                 ),

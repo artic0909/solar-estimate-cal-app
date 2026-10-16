@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 class DoodleCallout extends StatelessWidget {
-  const DoodleCallout({super.key});
+  final bool compact;
+
+  const DoodleCallout({super.key, this.compact = false});
 
   @override
   Widget build(BuildContext context) {
@@ -14,38 +16,38 @@ class DoodleCallout extends StatelessWidget {
           clipBehavior: Clip.none,
           children: [
             Padding(
-              padding: const EdgeInsets.only(right: 18.0, top: 4.0),
+              padding: EdgeInsets.only(right: compact ? 14.0 : 18.0, top: compact ? 2.0 : 4.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
-                children: const [
+                children: [
                   Text(
                     'Think you know',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: compact ? 12 : 14,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F5B9E),
+                      color: const Color(0xFF0F5B9E),
                       height: 1.15,
                     ),
                   ),
                   Text(
                     'your solar savings?',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: compact ? 12 : 14,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF0F5B9E),
+                      color: const Color(0xFF0F5B9E),
                       height: 1.15,
                     ),
                   ),
                   Text(
                     "Let's calculate!",
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: compact ? 13 : 15,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F5B9E),
+                      color: const Color(0xFF0F5B9E),
                       height: 1.25,
                     ),
                   ),
@@ -57,20 +59,20 @@ class DoodleCallout extends StatelessWidget {
               right: 0,
               top: 0,
               child: CustomPaint(
-                size: const Size(16, 16),
+                size: Size(compact ? 13 : 16, compact ? 13 : 16),
                 painter: _SunburstRaysPainter(),
               ),
             ),
           ],
         ),
 
-        const SizedBox(height: 6),
+        SizedBox(height: compact ? 3 : 6),
 
         // Curved arrow pointing left towards the CTA button
         Padding(
-          padding: const EdgeInsets.only(left: 12.0),
+          padding: EdgeInsets.only(left: compact ? 8.0 : 12.0),
           child: CustomPaint(
-            size: const Size(60, 26),
+            size: Size(compact ? 48 : 60, compact ? 20 : 26),
             painter: _CurvedArrowPainter(),
           ),
         ),
