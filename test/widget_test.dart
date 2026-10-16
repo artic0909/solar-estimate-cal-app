@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:solar_estimate_calculator/main.dart';
-import 'package:solar_estimate_calculator/providers/solar_calculator_provider.dart';
-import 'package:solar_estimate_calculator/screens/solar_home_screen.dart';
 
 void main() {
   testWidgets('Splash screen transitions directly to single-page SolarHomeScreen in landscape mode',

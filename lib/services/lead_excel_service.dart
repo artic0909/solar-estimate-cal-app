@@ -79,13 +79,13 @@ class LeadExcelService {
   }
 
   static String _buildCsvRow(List<dynamic> values) {
-    return values.map(_escapeCsv).join(',') + '\n';
+    return '${values.map(_escapeCsv).join(',')}\n';
   }
 
   static Future<void> _appendCsvToFile(File file, List<dynamic> values) async {
     try {
       if (!await file.exists()) {
-        final headerLine = headers.map(_escapeCsv).join(',') + '\n';
+        final headerLine = '${headers.map(_escapeCsv).join(',')}\n';
         await file.writeAsString(headerLine, flush: true);
       }
       final rowLine = _buildCsvRow(values);
