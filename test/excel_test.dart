@@ -13,7 +13,18 @@ void main() {
     ]);
 
     expect(sheet.rows.length, equals(1));
-    final encoded = excel.encode();
+    final encoded = excel.encode()!;
     expect(encoded, isNotNull);
+
+    var decoded = Excel.decodeBytes(encoded);
+    var sheet2 = decoded['Data'];
+    expect(sheet2.rows.length, equals(1));
+    sheet2.appendRow([
+      TextCellValue('Customer 2'),
+      TextCellValue('9876543210'),
+      IntCellValue(20),
+      DoubleCellValue(99.5),
+    ]);
+    expect(sheet2.rows.length, equals(2));
   });
 }

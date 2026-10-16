@@ -18,7 +18,6 @@ class SolarCalculatorProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   SolarCalculatorProvider() {
-    calculate();
     loadLeadsCount();
   }
 

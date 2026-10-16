@@ -25,23 +25,23 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
   // Calculation inputs state
   String _selectedState = 'West Bengal';
-  final TextEditingController _billController = TextEditingController(text: '5000');
+  final TextEditingController _billController = TextEditingController();
   String _propertyType = 'Residential';
   String _installationType = 'Rooftop';
   int _moduleWatt = 550;
 
-  // Appliance counts (matching client spreadsheet defaults)
-  int _fansCount = 3;
-  int _lightsCount = 6;
-  int _tvCount = 2;
-  int _acsCount = 1;
-  int _washingCount = 1;
-  int _fridgeCount = 1;
+  // Appliance counts (by default clean/empty until user enters)
+  int _fansCount = 0;
+  int _lightsCount = 0;
+  int _tvCount = 0;
+  int _acsCount = 0;
+  int _washingCount = 0;
+  int _fridgeCount = 0;
   int _kettleCount = 0;
   int _inductionCount = 0;
   int _pumpCount = 0;
-  int _geyserCount = 1;
-  final TextEditingController _otherWattsController = TextEditingController(text: '200');
+  int _geyserCount = 0;
+  final TextEditingController _otherWattsController = TextEditingController();
 
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _calculatorKey = GlobalKey();
@@ -120,17 +120,33 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     final rawMobile = _phoneController.text.trim();
     final rawEmail = _emailController.text.trim();
 
-    // 1. Check if user calculated estimate first
+    // 1. Check if user calculated estimate first, or auto-calculate if inputs are provided
     final provider = context.read<SolarCalculatorProvider>();
     if (!_hasCalculated || provider.result == null) {
-      TopAlert.show(
-        context,
-        title: 'Estimate Not Calculated',
-        message: 'Please click "GET MY ESTIMATE" first before saving.',
-        type: TopAlertType.warning,
-      );
-      _scrollToCalculator();
-      return;
+      final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
+      if (bill <= 0) {
+        TopAlert.show(
+          context,
+          title: 'Monthly Bill Required',
+          message: 'Please enter your monthly electricity bill before saving.',
+          type: TopAlertType.warning,
+        );
+        _scrollToCalculator();
+        return;
+      }
+      final input = _buildCurrentInput();
+      if (input.totalLoadWatts <= 0) {
+        TopAlert.show(
+          context,
+          title: 'Load Required',
+          message: 'Please specify at least one appliance count or load before saving.',
+          type: TopAlertType.warning,
+        );
+        _scrollToCalculator();
+        return;
+      }
+      _syncAndCalculate(notifyUI: true);
+      _hasCalculated = true;
     }
 
     // 2. Validate Customer Name
@@ -202,17 +218,13 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
     if (mounted) {
       if (success) {
-        // Reset lead form fields as requested
-        setState(() {
-          _nameController.clear();
-          _phoneController.clear();
-          _emailController.clear();
-        });
+        // Form data is deliberately kept intact as requested:
+        // "it must keep the data until i press clear btn"
 
         TopAlert.show(
           context,
           title: 'Saved Successfully',
-          message: 'Estimate saved directly to Downloads/Websol_Leads.xlsx',
+          message: 'Saved to Downloads (Websol_Leads.xlsx & CSV)',
           type: TopAlertType.success,
         );
       } else {
@@ -731,13 +743,13 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Top Section: Left Details & Right Appliances
+                    // Top Section: Left Details & Right Appliances (4 : 8 ratio)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Left Column (Property & Grid details)
+                        // Left Column (Property & Grid details) - 4 / 12
                         Expanded(
-                          flex: 5,
+                          flex: 4,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -750,9 +762,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                           ),
                         ),
                         SizedBox(width: colGap),
-                        // Right Column (10 Appliances)
+                        // Right Column (10 Appliances) - 8 / 12
                         Expanded(
-                          flex: 5,
+                          flex: 8,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -765,17 +777,17 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
                     const SizedBox(height: 20),
 
-                    // Side-by-Side Row: Installation Type & Other Load (Watt) - starting & ending same!
+                    // Side-by-Side Row: Installation Type (4/12) & Other Load (8/12)
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          flex: 5,
+                          flex: 4,
                           child: _buildInstallationTypeField(),
                         ),
                         SizedBox(width: colGap),
                         Expanded(
-                          flex: 5,
+                          flex: 8,
                           child: _buildOtherWattsField(),
                         ),
                       ],
@@ -1190,18 +1202,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 color: Color(0xFF0F172A),
               ),
             ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                '(Counts from Solar_Calculator.xlsx)',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
+         
           ],
         ),
         const SizedBox(height: 10),

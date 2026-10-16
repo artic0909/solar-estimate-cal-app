@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:solar_estimate_calculator/main.dart';
+import 'package:solar_estimate_calculator/providers/solar_calculator_provider.dart';
+import 'package:solar_estimate_calculator/screens/solar_home_screen.dart';
 
 void main() {
   testWidgets('Splash screen transitions directly to single-page SolarHomeScreen in landscape mode',
@@ -46,8 +49,18 @@ void main() {
     expect(find.text('GET MY ESTIMATE'), findsOneWidget);
     expect(find.text('CLEAR'), findsOneWidget);
 
-    // Results are hidden initially until user taps GET MY ESTIMATE
+    // Results are hidden initially until user inputs bill + load and taps GET MY ESTIMATE
     expect(find.text('YOUR SOLAR ESTIMATE'), findsNothing);
+
+    // Enter bill and load into respective fields
+    final billField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('5000') == true);
+    await tester.ensureVisible(billField);
+    await tester.enterText(billField, '5000');
+
+    final loadField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('200') == true);
+    await tester.ensureVisible(loadField);
+    await tester.enterText(loadField, '4915');
+    await tester.pumpAndSettle();
 
     // Ensure button is visible in scroll view, then tap "GET MY ESTIMATE"
     await tester.ensureVisible(find.text('GET MY ESTIMATE'));
@@ -96,8 +109,18 @@ void main() {
     expect(find.text('CALCULATE MY SAVINGS'), findsOneWidget);
     expect(find.text('TELL US ABOUT YOUR HOME'), findsOneWidget);
 
-    // Results are hidden initially until user taps GET MY ESTIMATE
+    // Results are hidden initially until user enters bill + load and taps GET MY ESTIMATE
     expect(find.text('YOUR SOLAR ESTIMATE'), findsNothing);
+
+    // Enter bill and load
+    final billField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('5000') == true);
+    await tester.ensureVisible(billField);
+    await tester.enterText(billField, '5000');
+
+    final loadField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('200') == true);
+    await tester.ensureVisible(loadField);
+    await tester.enterText(loadField, '4915');
+    await tester.pumpAndSettle();
 
     // Ensure button is visible in scroll view, then tap "GET MY ESTIMATE"
     await tester.ensureVisible(find.text('GET MY ESTIMATE'));
@@ -137,6 +160,16 @@ void main() {
     await tester.pumpWidget(const SolarEstimateApp());
     await tester.pumpAndSettle(const Duration(seconds: 4));
 
+    // Enter bill and load
+    final billField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('5000') == true);
+    await tester.ensureVisible(billField);
+    await tester.enterText(billField, '5000');
+
+    final loadField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('200') == true);
+    await tester.ensureVisible(loadField);
+    await tester.enterText(loadField, '4915');
+    await tester.pumpAndSettle();
+
     // Calculate estimate first
     await tester.ensureVisible(find.text('GET MY ESTIMATE'));
     await tester.pumpAndSettle();
@@ -152,5 +185,67 @@ void main() {
     // Verify error alert is shown
     expect(find.text('Customer Name Required'), findsOneWidget);
     expect(find.text("Please enter the customer's full name."), findsOneWidget);
+  });
+
+  testWidgets('Save result preserves form data until CLEAR button is pressed',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const SolarEstimateApp());
+    await tester.pumpAndSettle(const Duration(seconds: 4));
+
+    // Fill customer info
+    // Fill customer info and calculator fields
+    final textFields = find.byType(TextField);
+    await tester.ensureVisible(textFields.at(0));
+    await tester.enterText(textFields.at(0), 'Supriyo Das');
+    await tester.ensureVisible(textFields.at(1));
+    await tester.enterText(textFields.at(1), '9876543210');
+    await tester.ensureVisible(textFields.at(2));
+    await tester.enterText(textFields.at(2), 'supriyo@example.com');
+    await tester.ensureVisible(textFields.at(3));
+    await tester.enterText(textFields.at(3), '5000');
+    await tester.ensureVisible(textFields.at(4));
+    await tester.enterText(textFields.at(4), '4915');
+    await tester.pump();
+
+    // Click GET MY ESTIMATE
+    await tester.ensureVisible(find.text('GET MY ESTIMATE'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('GET MY ESTIMATE'));
+    await tester.pump(const Duration(seconds: 4));
+
+    // Tap SAVE RESULT
+    await tester.ensureVisible(find.text('SAVE RESULT'));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('SAVE RESULT'));
+    await tester.runAsync(() async {
+      await Future.delayed(const Duration(seconds: 1));
+    });
+    await tester.pump();
+
+
+
+    // Verify form fields are STILL intact (NOT erased on save)
+    expect(find.text('Supriyo Das'), findsOneWidget);
+    expect(find.text('9876543210'), findsOneWidget);
+    expect(find.text('supriyo@example.com'), findsOneWidget);
+    expect(find.text('5000'), findsOneWidget);
+    expect(find.text('4915'), findsOneWidget);
+
+    // Tap CLEAR button
+    await tester.ensureVisible(find.text('CLEAR'));
+    await tester.pump();
+    await tester.tap(find.text('CLEAR'));
+    await tester.pump(const Duration(seconds: 4));
+
+    // Form fields must now be reset
+    expect(find.text('Supriyo Das'), findsNothing);
+    expect(find.text('9876543210'), findsNothing);
+    expect(find.text('supriyo@example.com'), findsNothing);
+    expect(find.text('YOUR SOLAR ESTIMATE'), findsNothing);
   });
 }

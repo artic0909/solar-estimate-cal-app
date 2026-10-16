@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:excel/excel.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/solar_input.dart';
@@ -8,6 +10,7 @@ import '../models/solar_result.dart';
 
 class LeadExcelService {
   static const String fileName = 'Websol_Leads.xlsx';
+  static const String csvFileName = 'Websol_Leads.csv';
   static const String sheetName = 'Data';
 
   static const List<String> headers = [
@@ -61,8 +64,38 @@ class LeadExcelService {
     return File('${dir.path}/$fileName');
   }
 
-  /// Appends one lead entry to the Websol_Leads.xlsx file on tablet local storage.
-  /// Creates the workbook and header row if the file does not already exist.
+  static Future<File> getCsvFile() async {
+    final dir = await _resolveDirectory();
+    return File('${dir.path}/$csvFileName');
+  }
+
+  static String _escapeCsv(dynamic val) {
+    if (val == null) return '';
+    final s = val.toString();
+    if (s.contains(',') || s.contains('"') || s.contains('\n') || s.contains('\r')) {
+      return '"${s.replaceAll('"', '""')}"';
+    }
+    return s;
+  }
+
+  static String _buildCsvRow(List<dynamic> values) {
+    return values.map(_escapeCsv).join(',') + '\n';
+  }
+
+  static Future<void> _appendCsvToFile(File file, List<dynamic> values) async {
+    try {
+      if (!await file.exists()) {
+        final headerLine = headers.map(_escapeCsv).join(',') + '\n';
+        await file.writeAsString(headerLine, flush: true);
+      }
+      final rowLine = _buildCsvRow(values);
+      await file.writeAsString(rowLine, mode: FileMode.append, flush: true);
+    } catch (e) {
+      debugPrint('Error writing CSV to ${file.path}: $e');
+    }
+  }
+
+  /// Appends one lead entry to Websol_Leads.xlsx and Websol_Leads.csv.
   static Future<File> saveLead({
     required SolarInput input,
     required SolarResult result,
@@ -71,11 +104,18 @@ class LeadExcelService {
     Excel excel;
 
     if (await file.exists()) {
-      final bytes = await file.readAsBytes();
-      excel = Excel.decodeBytes(bytes);
+      try {
+        final bytes = await file.readAsBytes();
+        excel = Excel.decodeBytes(bytes);
+      } catch (e) {
+        debugPrint('Error reading existing Excel file: $e');
+        excel = Excel.createExcel();
+        if (excel.sheets.containsKey('Sheet1') && sheetName != 'Sheet1') {
+          excel.delete('Sheet1');
+        }
+      }
     } else {
       excel = Excel.createExcel();
-      // Remove default sheet if present and not named sheetName
       if (excel.sheets.containsKey('Sheet1') && sheetName != 'Sheet1') {
         excel.delete('Sheet1');
       }
@@ -95,6 +135,8 @@ class LeadExcelService {
     final revisedBillStr = result.isSurplus
         ? SolarResult.surplusRevisedBillMessage
         : result.revisedBill!.round().toString();
+
+    final nowStr = DateTime.now().toIso8601String();
 
     final row = <CellValue>[
       TextCellValue(input.name.trim().isEmpty ? '0' : input.name.trim()),
@@ -126,46 +168,126 @@ class LeadExcelService {
       DoubleCellValue(result.coalMT),
       DoubleCellValue(result.co2MT),
       IntCellValue(result.trees.round()),
-      TextCellValue(DateTime.now().toIso8601String()),
+      TextCellValue(nowStr),
     ];
 
     sheet.appendRow(row);
 
+    final rawValues = [
+      input.name.trim().isEmpty ? '0' : input.name.trim(),
+      input.mobile.trim().isEmpty ? '0' : input.mobile.trim(),
+      input.email.trim(),
+      input.state,
+      input.monthlyBill,
+      input.solarApplication,
+      input.installationType,
+      input.counts['fan'] ?? 0,
+      input.counts['light'] ?? 0,
+      input.counts['tv'] ?? 0,
+      input.counts['ac'] ?? 0,
+      input.counts['washing'] ?? 0,
+      input.counts['fridge'] ?? 0,
+      input.counts['kettle'] ?? 0,
+      input.counts['induction'] ?? 0,
+      input.counts['pump'] ?? 0,
+      input.counts['geyser'] ?? 0,
+      input.otherWatts,
+      billReductionStr,
+      result.monthlySaving,
+      revisedBillStr,
+      result.spaceM2,
+      result.modules,
+      result.cost,
+      result.subsidy,
+      result.effectiveCost,
+      result.coalMT,
+      result.co2MT,
+      result.trees.round(),
+      nowStr,
+    ];
+
     final encodedBytes = excel.encode();
     if (encodedBytes != null) {
-      // 1. Write to internal app docs
+      // 1. Write Excel and CSV to internal app docs
       await file.writeAsBytes(encodedBytes, flush: true);
+      final csvFile = await getCsvFile();
+      await _appendCsvToFile(csvFile, rawValues);
 
-      // 2. On Android, copy to public Download and external storage folders so user can see it in Files/Downloads
+      String? fullCsvContent;
+      try {
+        if (await csvFile.exists()) {
+          fullCsvContent = await csvFile.readAsString();
+        }
+      } catch (_) {}
+
+      // 2. On Android, save directly to public Downloads folder via MediaStore
       if (!kIsWeb && Platform.isAndroid) {
+        try {
+          const platform = MethodChannel('com.websol.solar_estimate_calculator/storage');
+          await platform.invokeMethod('saveToPublicDownloads', {
+            'fileName': fileName,
+            'bytes': Uint8List.fromList(encodedBytes),
+            'mimeType': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          });
+
+          if (fullCsvContent != null && fullCsvContent.isNotEmpty) {
+            await platform.invokeMethod('saveToPublicDownloads', {
+              'fileName': csvFileName,
+              'bytes': Uint8List.fromList(utf8.encode(fullCsvContent)),
+              'mimeType': 'text/csv',
+            });
+          }
+        } catch (e) {
+          debugPrint('MethodChannel saveToPublicDownloads failed: $e');
+        }
+
+        // Secondary fallback: Direct file writes
+        // A. Root Download folder
         try {
           final downloadDir = Directory('/storage/emulated/0/Download');
           if (await downloadDir.exists()) {
-            final downloadFile = File('${downloadDir.path}/$fileName');
-            await downloadFile.writeAsBytes(encodedBytes, flush: true);
+            await File('${downloadDir.path}/$fileName').writeAsBytes(encodedBytes, flush: true);
+            await _appendCsvToFile(File('${downloadDir.path}/$csvFileName'), rawValues);
           }
         } catch (e) {
-          debugPrint('Failed to write to public Download folder: $e');
+          debugPrint('Failed to write to public Download: $e');
         }
 
+        // B. Root Documents folder
+        try {
+          final docDir = Directory('/storage/emulated/0/Documents');
+          if (await docDir.exists()) {
+            await File('${docDir.path}/$fileName').writeAsBytes(encodedBytes, flush: true);
+            await _appendCsvToFile(File('${docDir.path}/$csvFileName'), rawValues);
+          }
+        } catch (e) {
+          debugPrint('Failed to write to public Documents: $e');
+        }
+
+        // C. App-specific external storage (accessible via file manager/USB)
         try {
           final extDir = await getExternalStorageDirectory();
           if (extDir != null && await extDir.exists()) {
-            final extFile = File('${extDir.path}/$fileName');
-            await extFile.writeAsBytes(encodedBytes, flush: true);
+            await File('${extDir.path}/$fileName').writeAsBytes(encodedBytes, flush: true);
+            await _appendCsvToFile(File('${extDir.path}/$csvFileName'), rawValues);
           }
         } catch (e) {
           debugPrint('Failed to write to external app folder: $e');
         }
 
+        // D. External downloads directories
         try {
-          final docDir = Directory('/storage/emulated/0/Documents');
-          if (await docDir.exists()) {
-            final docFile = File('${docDir.path}/$fileName');
-            await docFile.writeAsBytes(encodedBytes, flush: true);
+          final extDownloads = await getExternalStorageDirectories(type: StorageDirectory.downloads);
+          if (extDownloads != null) {
+            for (final d in extDownloads) {
+              if (await d.exists()) {
+                await File('${d.path}/$fileName').writeAsBytes(encodedBytes, flush: true);
+                await _appendCsvToFile(File('${d.path}/$csvFileName'), rawValues);
+              }
+            }
           }
         } catch (e) {
-          debugPrint('Failed to write to public Documents folder: $e');
+          debugPrint('Failed to write to external downloads: $e');
         }
       }
     }
@@ -173,20 +295,9 @@ class LeadExcelService {
     return file;
   }
 
-  /// User-friendly path description for UI SnackBar
+  /// User-friendly path description for UI
   static Future<String> getPublicSavedPathDescription() async {
-    if (!kIsWeb && Platform.isAndroid) {
-      final downloadDir = Directory('/storage/emulated/0/Download');
-      if (await downloadDir.exists()) {
-        return 'Tablet Downloads / Websol_Leads.xlsx';
-      }
-      final extDir = await getExternalStorageDirectory();
-      if (extDir != null) {
-        return '${extDir.path}/$fileName';
-      }
-    }
-    final file = await getExcelFile();
-    return file.path;
+    return 'Tablet Downloads / Websol_Leads.xlsx (and .csv)';
   }
 
   /// Exports or shares the Websol_Leads.xlsx file using native sharing sheet
@@ -214,14 +325,28 @@ class LeadExcelService {
   /// Check if leads file exists and how many leads have been saved
   static Future<int> getSavedLeadsCount() async {
     final file = await getExcelFile();
-    if (!await file.exists()) return 0;
-    try {
-      final bytes = await file.readAsBytes();
-      final excel = Excel.decodeBytes(bytes);
-      final sheet = excel[sheetName];
-      return (sheet.maxRows > 1) ? sheet.maxRows - 1 : 0;
-    } catch (_) {
-      return 0;
+    if (await file.exists()) {
+      try {
+        final bytes = await file.readAsBytes();
+        final excel = Excel.decodeBytes(bytes);
+        final sheet = excel[sheetName];
+        if (sheet.maxRows > 1) {
+          return sheet.maxRows - 1;
+        }
+      } catch (_) {}
     }
+
+    // Fallback: Check CSV file
+    try {
+      final csvFile = await getCsvFile();
+      if (await csvFile.exists()) {
+        final lines = await csvFile.readAsLines();
+        if (lines.length > 1) {
+          return lines.length - 1;
+        }
+      }
+    } catch (_) {}
+
+    return 0;
   }
 }
