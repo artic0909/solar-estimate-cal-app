@@ -105,6 +105,23 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('YOUR SOLAR ESTIMATE'), findsOneWidget);
+    expect(find.text('Estimated Monthly\nSavings'), findsOneWidget);
+    expect(find.text('Bill\nReduction'), findsOneWidget);
+    expect(find.text('Revised Monthly\nBill'), findsOneWidget);
+    expect(find.text('Approx. Cost\nof Modules'), findsOneWidget);
+    expect(find.text('Govt. Subsidy\n(PM Surya Ghar)'), findsOneWidget);
+
     expect(find.text('YOUR IMPACT GOES BEYOND SAVINGS'), findsOneWidget);
+    expect(find.text('3.63'), findsWidgets);
+    expect(find.text('4.45'), findsWidgets);
+    expect(find.text('202'), findsWidgets);
+
+    expect(find.text('CUSTOMER DETAILS'), findsOneWidget);
+    expect(find.text('Full Name *'), findsOneWidget);
+    expect(find.text('Phone Number (10 digits) *'), findsOneWidget);
+    expect(find.text('Email ID (Optional)'), findsOneWidget);
+
+    expect(find.text('READY TO EXPLORE\nYOUR SOLAR FUTURE?'), findsOneWidget);
+    expect(find.text('Scan the QR code to connect with Websol'), findsOneWidget);
   });
 }

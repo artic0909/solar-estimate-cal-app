@@ -357,87 +357,88 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   // ==========================================
   Widget _buildHeroSection(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final isWide = size.width >= 850;
+    final isCompact = size.width < 700;
 
     return Container(
       color: Colors.white,
       child: Stack(
         children: [
-          if (isWide)
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: 0,
-              width: size.width * 0.58,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(
-                    'assets/images/solar_panels_hero.jpg',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.centerRight,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Image.asset(
-                        'assets/images/hero_banner.png',
-                        fit: BoxFit.cover,
-                        alignment: Alignment.centerRight,
-                      );
-                    },
-                  ),
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Colors.white,
-                          Color(0xD9FFFFFF),
-                          Color(0x22FFFFFF),
-                          Colors.transparent,
-                        ],
-                        stops: [0.0, 0.16, 0.38, 0.60],
-                      ),
+          // Solar panels hero image with white gradient blend & orange corner wave
+          // Always visible in both landscape and portrait!
+          Positioned(
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: size.width * (isCompact ? 0.50 : 0.58),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Image.asset(
+                  'assets/images/solar_panels_hero.jpg',
+                  fit: BoxFit.cover,
+                  alignment: Alignment.centerRight,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Image.asset(
+                      'assets/images/hero_banner.png',
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                    );
+                  },
+                ),
+                Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                      colors: [
+                        Colors.white,
+                        Color(0xD9FFFFFF),
+                        Color(0x22FFFFFF),
+                        Colors.transparent,
+                      ],
+                      stops: [0.0, 0.16, 0.38, 0.60],
                     ),
                   ),
-                  Positioned(
-                    right: 0,
-                    bottom: 0,
-                    width: size.width * 0.28,
-                    height: 100,
-                    child: CustomPaint(
-                      painter: _OrangeCornerWavePainter(),
-                    ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  width: size.width * (isCompact ? 0.22 : 0.28),
+                  height: isCompact ? 70 : 100,
+                  child: CustomPaint(
+                    painter: _OrangeCornerWavePainter(),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+          ),
 
           SafeArea(
             bottom: false,
             child: Padding(
               padding: EdgeInsets.symmetric(
-                horizontal: isWide ? 44.0 : 20.0,
+                horizontal: isCompact ? 24.0 : 44.0,
                 vertical: 24.0,
               ),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
-                  maxWidth: isWide ? (size.width * 0.50) : size.width,
+                  maxWidth: size.width * (isCompact ? 0.62 : 0.50),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const WebsolLogo(fontSize: 44, showTagline: true),
-                    const SizedBox(height: 28),
+                    WebsolLogo(fontSize: isCompact ? 36 : 44, showTagline: true),
+                    SizedBox(height: isCompact ? 20 : 28),
                     RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         style: TextStyle(
-                          fontSize: 40,
+                          fontSize: isCompact ? 30 : (size.width < 900 ? 34 : 40),
                           fontWeight: FontWeight.w900,
                           height: 1.1,
                           letterSpacing: 0.5,
                           fontFamily: 'sans-serif',
                         ),
-                        children: [
+                        children: const [
                           TextSpan(
                             text: 'WHAT COULD\n',
                             style: TextStyle(color: Color(0xFF0E3B6C)),
@@ -504,31 +505,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                         const DoodleCallout(),
                       ],
                     ),
-                    if (!isWide) ...[
-                      const SizedBox(height: 24),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Stack(
-                          children: [
-                            Image.asset(
-                              'assets/images/solar_panels_hero.jpg',
-                              height: 180,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                            Positioned(
-                              right: 0,
-                              bottom: 0,
-                              width: 120,
-                              height: 60,
-                              child: CustomPaint(
-                                painter: _OrangeCornerWavePainter(),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
                   ],
                 ),
               ),
@@ -660,15 +636,16 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
           LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 720;
+              final isWide = constraints.maxWidth >= 500;
+              final gap = constraints.maxWidth >= 720 ? 18.0 : 12.0;
               if (isWide) {
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(child: _buildNameInput()),
-                    const SizedBox(width: 18),
+                    SizedBox(width: gap),
                     Expanded(child: _buildPhoneInput()),
-                    const SizedBox(width: 18),
+                    SizedBox(width: gap),
                     Expanded(child: _buildEmailInput()),
                   ],
                 );
@@ -714,7 +691,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final isTwoColumn = constraints.maxWidth >= 700;
+              final isTwoColumn = constraints.maxWidth >= 500;
+              final colGap = constraints.maxWidth >= 750 ? 32.0 : 20.0;
 
               if (isTwoColumn) {
                 return Column(
@@ -738,7 +716,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 36),
+                        SizedBox(width: colGap),
                         // Right Column (10 Appliances)
                         Expanded(
                           flex: 5,
@@ -762,7 +740,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                           flex: 5,
                           child: _buildInstallationTypeField(),
                         ),
-                        const SizedBox(width: 36),
+                        SizedBox(width: colGap),
                         Expanded(
                           flex: 5,
                           child: _buildOtherWattsField(),
@@ -1522,61 +1500,43 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
           const SizedBox(height: 24),
 
-          // 5 Metric Cards (Responsive Layout)
+          // 5 Metric Cards (Always single row on tablet portrait & landscape)
           LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 900;
-              final isMedium = constraints.maxWidth >= 550;
+              final isWide = constraints.maxWidth >= 500;
+              final isCompact = constraints.maxWidth < 850;
+              final spacing = isCompact ? 8.0 : 12.0;
 
               if (isWide) {
                 return Row(
                   children: [
-                    Expanded(child: _buildSavingsMetricCard(result)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildBillReductionMetricCard(result)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildRevisedBillMetricCard(result)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildInstallationCostMetricCard(result)),
-                    const SizedBox(width: 12),
-                    Expanded(child: _buildSubsidyMetricCard(result)),
-                  ],
-                );
-              } else if (isMedium) {
-                return Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(child: _buildSavingsMetricCard(result)),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildBillReductionMetricCard(result)),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildRevisedBillMetricCard(result)),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(child: _buildInstallationCostMetricCard(result)),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildSubsidyMetricCard(result)),
-                      ],
-                    ),
+                    Expanded(child: _buildSavingsMetricCard(result, isCompact: isCompact)),
+                    SizedBox(width: spacing),
+                    Expanded(child: _buildBillReductionMetricCard(result, isCompact: isCompact)),
+                    SizedBox(width: spacing),
+                    Expanded(child: _buildRevisedBillMetricCard(result, isCompact: isCompact)),
+                    SizedBox(width: spacing),
+                    Expanded(child: _buildInstallationCostMetricCard(result, isCompact: isCompact)),
+                    SizedBox(width: spacing),
+                    Expanded(child: _buildSubsidyMetricCard(result, isCompact: isCompact)),
                   ],
                 );
               } else {
-                return Column(
-                  children: [
-                    _buildSavingsMetricCard(result),
-                    const SizedBox(height: 12),
-                    _buildBillReductionMetricCard(result),
-                    const SizedBox(height: 12),
-                    _buildRevisedBillMetricCard(result),
-                    const SizedBox(height: 12),
-                    _buildInstallationCostMetricCard(result),
-                    const SizedBox(height: 12),
-                    _buildSubsidyMetricCard(result),
-                  ],
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      SizedBox(width: 140, child: _buildSavingsMetricCard(result, isCompact: true)),
+                      const SizedBox(width: 8),
+                      SizedBox(width: 140, child: _buildBillReductionMetricCard(result, isCompact: true)),
+                      const SizedBox(width: 8),
+                      SizedBox(width: 140, child: _buildRevisedBillMetricCard(result, isCompact: true)),
+                      const SizedBox(width: 8),
+                      SizedBox(width: 140, child: _buildInstallationCostMetricCard(result, isCompact: true)),
+                      const SizedBox(width: 8),
+                      SizedBox(width: 140, child: _buildSubsidyMetricCard(result, isCompact: true)),
+                    ],
+                  ),
                 );
               }
             },
@@ -1650,9 +1610,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 1. Estimated Monthly Savings
-  Widget _buildSavingsMetricCard(SolarResult result) {
+  Widget _buildSavingsMetricCard(SolarResult result, {bool isCompact = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 14 : 18),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF7ED),
         borderRadius: BorderRadius.circular(16),
@@ -1680,12 +1640,15 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            '₹ ${_formatIndianCurrency(result.monthlySaving)}',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFFEA580C),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '₹ ${_formatIndianCurrency(result.monthlySaving)}',
+              style: TextStyle(
+                fontSize: isCompact ? 19 : 22,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFFEA580C),
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -1699,13 +1662,13 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 2. Electricity Bill Reduction
-  Widget _buildBillReductionMetricCard(SolarResult result) {
+  Widget _buildBillReductionMetricCard(SolarResult result, {bool isCompact = false}) {
     final bool isSurplus = result.isSurplus;
     final percVal = isSurplus ? 100 : (result.billReduction! * 100.0).toStringAsFixed(1);
     final progress = isSurplus ? 1.0 : result.billReduction!.clamp(0.0, 1.0);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 14 : 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1714,14 +1677,14 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       child: Column(
         children: [
           SizedBox(
-            width: 58,
-            height: 58,
+            width: isCompact ? 48 : 58,
+            height: isCompact ? 48 : 58,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 Container(
-                  width: 58,
-                  height: 58,
+                  width: isCompact ? 48 : 58,
+                  height: isCompact ? 48 : 58,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isSurplus
@@ -1771,12 +1734,15 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             isSurplus ? 'Surplus Energy' : 'up to',
             style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
           ),
-          Text(
-            isSurplus ? 'Surplus' : '$percVal%',
-            style: TextStyle(
-              fontSize: isSurplus ? 18 : 22,
-              fontWeight: FontWeight.w900,
-              color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              isSurplus ? 'Surplus' : '$percVal%',
+              style: TextStyle(
+                fontSize: isSurplus ? 18 : (isCompact ? 19 : 22),
+                fontWeight: FontWeight.w900,
+                color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C),
+              ),
             ),
           ),
         ],
@@ -1785,11 +1751,11 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 3. Revised Monthly Electricity Bill
-  Widget _buildRevisedBillMetricCard(SolarResult result) {
+  Widget _buildRevisedBillMetricCard(SolarResult result, {bool isCompact = false}) {
     final bool isSurplus = result.isSurplus;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 14 : 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1817,12 +1783,15 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            isSurplus ? '₹ 0' : '₹ ${_formatIndianCurrency(result.revisedBill!)}',
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0F5B9E),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              isSurplus ? '₹ 0' : '₹ ${_formatIndianCurrency(result.revisedBill!)}',
+              style: TextStyle(
+                fontSize: isCompact ? 19 : 22,
+                fontWeight: FontWeight.w900,
+                color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0F5B9E),
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -1836,9 +1805,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 4. Estimated Solar Installation Cost
-  Widget _buildInstallationCostMetricCard(SolarResult result) {
+  Widget _buildInstallationCostMetricCard(SolarResult result, {bool isCompact = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 14 : 18),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1866,12 +1835,15 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            '₹ ${_formatIndianCurrency(result.cost)}',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF0E3B6C),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '₹ ${_formatIndianCurrency(result.cost)}',
+              style: TextStyle(
+                fontSize: isCompact ? 19 : 22,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF0E3B6C),
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -1885,9 +1857,9 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   }
 
   // 5. Applicable Government Subsidy
-  Widget _buildSubsidyMetricCard(SolarResult result) {
+  Widget _buildSubsidyMetricCard(SolarResult result, {bool isCompact = false}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 18),
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 14, vertical: isCompact ? 14 : 18),
       decoration: BoxDecoration(
         color: const Color(0xFFF0FDF4),
         borderRadius: BorderRadius.circular(16),
@@ -1915,12 +1887,15 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            '₹ ${_formatIndianCurrency(result.subsidy)}',
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF15803D),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '₹ ${_formatIndianCurrency(result.subsidy)}',
+              style: TextStyle(
+                fontSize: isCompact ? 19 : 22,
+                fontWeight: FontWeight.w900,
+                color: const Color(0xFF15803D),
+              ),
             ),
           ),
           const SizedBox(height: 4),
@@ -1978,7 +1953,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
           LayoutBuilder(
             builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 600;
+              final isWide = constraints.maxWidth >= 480;
 
               if (isWide) {
                 return Row(
@@ -2355,14 +2330,16 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 constraints: const BoxConstraints(maxWidth: 1100),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    final isWide = constraints.maxWidth >= 750;
+                    final isWide = constraints.maxWidth >= 500;
+                    final isCompact = constraints.maxWidth < 750;
+                    final gap = isCompact ? 20.0 : 32.0;
 
                     if (isWide) {
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Expanded(child: _buildFooterLeftContent()),
-                          const SizedBox(width: 32),
+                          Expanded(child: _buildFooterLeftContent(isCompact: isCompact)),
+                          SizedBox(width: gap),
                           _buildFooterQrCard(),
                         ],
                       );
@@ -2370,7 +2347,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildFooterLeftContent(),
+                          _buildFooterLeftContent(isCompact: true),
                           const SizedBox(height: 24),
                           Center(child: _buildFooterQrCard()),
                         ],
@@ -2387,22 +2364,22 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     );
   }
 
-  Widget _buildFooterLeftContent() {
+  Widget _buildFooterLeftContent({bool isCompact = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           'READY TO EXPLORE\nYOUR SOLAR FUTURE?',
           style: TextStyle(
-            fontSize: 26,
+            fontSize: isCompact ? 22 : 26,
             fontWeight: FontWeight.w900,
-            color: Color(0xFF0E3B6C),
+            color: const Color(0xFF0E3B6C),
             height: 1.15,
             letterSpacing: 0.5,
           ),
         ),
-        SizedBox(height: 8),
-        Text(
+        const SizedBox(height: 8),
+        const Text(
           'Powering Tomorrow’s Energy',
           style: TextStyle(
             fontSize: 14,
@@ -2411,8 +2388,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             letterSpacing: 0.2,
           ),
         ),
-        SizedBox(height: 10),
-        Text(
+        const SizedBox(height: 10),
+        const Text(
           'Discover how Websol can help power a more sustainable tomorrow.',
           style: TextStyle(
             fontSize: 13,
