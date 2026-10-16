@@ -24,7 +24,7 @@ class DoodleCallout extends StatelessWidget {
                   Text(
                     'Think you know',
                     style: TextStyle(
-                      fontSize: compact ? 12 : 14,
+                      fontSize: compact ? 10.5 : 12,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF0F5B9E),
@@ -34,7 +34,7 @@ class DoodleCallout extends StatelessWidget {
                   Text(
                     'your solar savings?',
                     style: TextStyle(
-                      fontSize: compact ? 12 : 14,
+                      fontSize: compact ? 10.5 : 12,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w700,
                       color: const Color(0xFF0F5B9E),
@@ -44,7 +44,7 @@ class DoodleCallout extends StatelessWidget {
                   Text(
                     "Let's calculate!",
                     style: TextStyle(
-                      fontSize: compact ? 13 : 15,
+                      fontSize: compact ? 11.5 : 13,
                       fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w800,
                       color: const Color(0xFF0F5B9E),

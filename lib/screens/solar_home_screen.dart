@@ -428,12 +428,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    WebsolLogo(fontSize: isPortrait ? 32 : 44, showTagline: true),
+                    WebsolLogo(fontSize: isPortrait ? 28 : 38, showTagline: true),
                     SizedBox(height: isPortrait ? 10 : 26),
                     RichText(
                       text: TextSpan(
                         style: TextStyle(
-                          fontSize: isPortrait ? 27 : (size.width < 900 ? 34 : 40),
+                          fontSize: isPortrait ? 23 : (size.width < 900 ? 29 : 34),
                           fontWeight: FontWeight.w900,
                           height: 1.08,
                           letterSpacing: 0.5,
@@ -455,7 +455,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     Text(
                       'Your Electricity Bill. Your Solar Potential. Your Savings.',
                       style: TextStyle(
-                        fontSize: isPortrait ? 13 : 16,
+                        fontSize: isPortrait ? 11.5 : 14,
                         fontWeight: FontWeight.w800,
                         color: const Color(0xFF0F5B9E),
                         letterSpacing: 0.2,
@@ -465,7 +465,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     Text(
                       'Discover your estimated savings with rooftop solar using our interactive Solar Calculator.',
                       style: TextStyle(
-                        fontSize: isPortrait ? 12 : 14,
+                        fontSize: isPortrait ? 10.5 : 12.5,
                         fontWeight: FontWeight.w500,
                         color: const Color(0xFF475569),
                         height: 1.35,
@@ -499,7 +499,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                                 Text(
                                   'CALCULATE MY SAVINGS',
                                   style: TextStyle(
-                                    fontSize: isPortrait ? 12.5 : 15,
+                                    fontSize: isPortrait ? 11 : 13,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.7,
                                   ),
@@ -557,7 +557,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 Text(
                   'TELL US ABOUT YOUR HOME',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 17,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF0E3B6C),
                     letterSpacing: 0.5,
@@ -567,7 +567,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 Text(
                   "A few simple details and we'll show you your potential savings.",
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 11.5,
                     color: Color(0xFF64748B),
                     fontWeight: FontWeight.w500,
                   ),
@@ -620,7 +620,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     Text(
                       'CUSTOMER DETAILS',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFF0E3B6C),
                         letterSpacing: 0.5,
@@ -630,7 +630,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     Text(
                       'Enter customer contact information',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         color: Color(0xFF64748B),
                         fontWeight: FontWeight.w500,
                       ),
@@ -862,13 +862,13 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                           Text(
                             'GET MY ESTIMATE',
                             style: TextStyle(
-                              fontSize: 15,
+                              fontSize: 13.5,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 0.8,
                             ),
                           ),
                           SizedBox(width: 8),
-                          Icon(Icons.arrow_forward_rounded, size: 20),
+                          Icon(Icons.arrow_forward_rounded, size: 18),
                         ],
                       ),
                     ),
@@ -891,12 +891,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.refresh_rounded, size: 18, color: Color(0xFF64748B)),
+                        Icon(Icons.refresh_rounded, size: 16, color: Color(0xFF64748B)),
                         SizedBox(width: 6),
                         Text(
                           'CLEAR',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.8,
                             color: Color(0xFF334155),
@@ -918,13 +918,13 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   Widget _buildFieldTitle({required IconData icon, required String title}) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFF0E3B6C)),
+        Icon(icon, size: 15, color: const Color(0xFF0E3B6C)),
         const SizedBox(width: 6),
         Flexible(
           child: Text(
             title,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 11.5,
               fontWeight: FontWeight.w700,
               color: Color(0xFF0F172A),
             ),
@@ -958,7 +958,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   child: Text(
                     state,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 12.5,
                       color: Color(0xFF0F172A),
                       fontWeight: FontWeight.w600,
                     ),
@@ -989,10 +989,10 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           onChanged: (_) => _syncAndCalculate(),
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: 'Enter amount (e.g. 5000)',
-            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -1040,7 +1040,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   child: Text(
                     'Residential',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: _propertyType == 'Residential' ? Colors.white : const Color(0xFF475569),
                     ),
@@ -1069,7 +1069,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   child: Text(
                     'Commercial',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: _propertyType == 'Commercial' ? Colors.white : const Color(0xFF475569),
                     ),
@@ -1104,8 +1104,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
               items: const [
-                DropdownMenuItem(value: 'Rooftop', child: Text('Rooftop', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
-                DropdownMenuItem(value: 'Ground Mounted', child: Text('Ground Mounted', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                DropdownMenuItem(value: 'Rooftop', child: Text('Rooftop', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                DropdownMenuItem(value: 'Ground Mounted', child: Text('Ground Mounted', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
               ],
               onChanged: (val) {
                 if (val != null) {
@@ -1141,8 +1141,8 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               isExpanded: true,
               icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Color(0xFF64748B)),
               items: const [
-                DropdownMenuItem(value: 550, child: Text('550 W (Default Mono-PERC / TopCon)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
-                DropdownMenuItem(value: 500, child: Text('500 W (Standard)', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+                DropdownMenuItem(value: 550, child: Text('550 W (Default Mono-PERC / TopCon)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
+                DropdownMenuItem(value: 500, child: Text('500 W (Standard)', style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600))),
               ],
               onChanged: (val) {
                 if (val != null) {
@@ -1163,12 +1163,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       children: [
         Row(
           children: [
-            const Icon(Icons.kitchen_outlined, size: 16, color: Color(0xFF0E3B6C)),
+            const Icon(Icons.kitchen_outlined, size: 15, color: Color(0xFF0E3B6C)),
             const SizedBox(width: 6),
             const Text(
               'Household Appliances',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
                 color: Color(0xFF0F172A),
               ),
@@ -1179,7 +1179,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 '(Counts from Solar_Calculator.xlsx)',
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 10,
                   color: Colors.grey.shade500,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1345,11 +1345,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: (_) => _syncAndCalculate(),
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               hintText: 'e.g. 200',
+              hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
               suffixText: 'Watt',
-              suffixStyle: const TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF0E3B6C)),
+              suffixStyle: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: Color(0xFF0E3B6C)),
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -1385,14 +1386,14 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: const Color(0xFF64748B)),
+          Icon(icon, size: 15, color: const Color(0xFF64748B)),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF334155),
               ),
@@ -1408,7 +1409,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   value: i,
                   child: Text(
                     '$i',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
                   ),
                 );
               }).toList(),
@@ -1457,7 +1458,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     Text(
                       'YOUR SOLAR ESTIMATE',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.w900,
                         color: Color(0xFF0E3B6C),
                         letterSpacing: 0.5,
@@ -1467,7 +1468,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     Text(
                       "Based on your inputs, here's what you could save and achieve.",
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 11.5,
                         color: Color(0xFF64748B),
                         fontWeight: FontWeight.w500,
                       ),
@@ -1496,7 +1497,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     child: Text(
                       'You are now generating Surplus Energy! You will get benefit of Surplus Amount in Next Month Bill.',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF14532D),
                       ),
@@ -1600,16 +1601,16 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: highlight ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C)),
+        Icon(icon, size: 16, color: highlight ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C)),
         const SizedBox(width: 8),
         Text(
           '$label: ',
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
+          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Color(0xFF64748B)),
         ),
         Text(
           value,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 11.5,
             fontWeight: FontWeight.w800,
             color: highlight ? const Color(0xFF16A34A) : const Color(0xFF0F172A),
           ),
@@ -1642,7 +1643,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             'Estimated Monthly\nSavings',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: Color(0xFF9A3412),
               height: 1.25,
@@ -1654,7 +1655,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             child: Text(
               '₹ ${_formatIndianCurrency(result.monthlySaving)}',
               style: TextStyle(
-                fontSize: isCompact ? 19 : 22,
+                fontSize: isCompact ? 16 : 18,
                 fontWeight: FontWeight.w900,
                 color: const Color(0xFFEA580C),
               ),
@@ -1663,7 +1664,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           const SizedBox(height: 4),
           const Text(
             'approx.',
-            style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+            style: TextStyle(fontSize: 9.5, color: Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -1717,7 +1718,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     child: Text(
                       isSurplus ? '100%' : '$percVal%',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.w900,
                         color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C),
                       ),
@@ -1732,7 +1733,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             'Bill\nReduction',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: Color(0xFF0E3B6C),
               height: 1.25,
@@ -1741,14 +1742,14 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           const SizedBox(height: 8),
           Text(
             isSurplus ? 'Surplus Energy' : 'up to',
-            style: const TextStyle(fontSize: 10, color: Color(0xFF64748B)),
+            style: const TextStyle(fontSize: 9, color: Color(0xFF64748B)),
           ),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               isSurplus ? 'Surplus' : '$percVal%',
               style: TextStyle(
-                fontSize: isSurplus ? 18 : (isCompact ? 19 : 22),
+                fontSize: isSurplus ? 15 : (isCompact ? 16 : 18),
                 fontWeight: FontWeight.w900,
                 color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0E3B6C),
               ),
@@ -1785,7 +1786,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             'Revised Monthly\nBill',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: Color(0xFF0369A1),
               height: 1.25,
@@ -1797,7 +1798,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             child: Text(
               isSurplus ? '₹ 0' : '₹ ${_formatIndianCurrency(result.revisedBill!)}',
               style: TextStyle(
-                fontSize: isCompact ? 19 : 22,
+                fontSize: isCompact ? 16 : 18,
                 fontWeight: FontWeight.w900,
                 color: isSurplus ? const Color(0xFF16A34A) : const Color(0xFF0F5B9E),
               ),
@@ -1806,7 +1807,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           const SizedBox(height: 4),
           Text(
             isSurplus ? 'Surplus credited' : 'approx.',
-            style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+            style: const TextStyle(fontSize: 9.5, color: Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -1837,7 +1838,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             'Approx. Cost\nof Modules',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: Color(0xFF0E3B6C),
               height: 1.25,
@@ -1849,7 +1850,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             child: Text(
               '₹ ${_formatIndianCurrency(result.cost)}',
               style: TextStyle(
-                fontSize: isCompact ? 19 : 22,
+                fontSize: isCompact ? 16 : 18,
                 fontWeight: FontWeight.w900,
                 color: const Color(0xFF0E3B6C),
               ),
@@ -1858,7 +1859,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           const SizedBox(height: 4),
           const Text(
             'approx.',
-            style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+            style: TextStyle(fontSize: 9.5, color: Color(0xFF94A3B8)),
           ),
         ],
       ),
@@ -1889,7 +1890,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             'Govt. Subsidy\n(PM Surya Ghar)',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: Color(0xFF15803D),
               height: 1.25,
@@ -1901,7 +1902,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             child: Text(
               '₹ ${_formatIndianCurrency(result.subsidy)}',
               style: TextStyle(
-                fontSize: isCompact ? 19 : 22,
+                fontSize: isCompact ? 16 : 18,
                 fontWeight: FontWeight.w900,
                 color: const Color(0xFF15803D),
               ),
@@ -1911,7 +1912,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           const Text(
             'PM Surya Ghar',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 10, color: Color(0xFF64748B), height: 1.2),
+            style: TextStyle(fontSize: 9, color: Color(0xFF64748B), height: 1.2),
           ),
         ],
       ),
@@ -1948,7 +1949,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 child: Text(
                   'YOUR IMPACT GOES BEYOND SAVINGS',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 13,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF14532D),
                     letterSpacing: 0.4,
@@ -2058,12 +2059,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
-                  fontSize: 12,
+                  fontSize: 10.5,
                 ),
               ),
             )
           else
-            Icon(icon, size: 36, color: const Color(0xFF15803D)),
+            Icon(icon, size: 32, color: const Color(0xFF15803D)),
 
           const SizedBox(width: 12),
 
@@ -2075,7 +2076,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                 Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w600,
                     color: Color(0xFF166534),
                     height: 1.2,
@@ -2093,7 +2094,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       Text(
                         value,
                         style: const TextStyle(
-                          fontSize: 24,
+                          fontSize: 18,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF14532D),
                         ),
@@ -2102,7 +2103,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                       Text(
                         unit,
                         style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF15803D),
                         ),
@@ -2133,20 +2134,20 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             runSpacing: 12,
             children: [
               SizedBox(
-                height: 54,
+                height: 52,
                 child: ElevatedButton.icon(
                   onPressed: provider.isSavingLead ? null : _handleSaveLead,
                   icon: provider.isSavingLead
                       ? const SizedBox(
-                          width: 22,
-                          height: 22,
+                          width: 20,
+                          height: 20,
                           child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
                         )
-                      : const Icon(Icons.save_rounded, size: 22),
+                      : const Icon(Icons.save_rounded, size: 20),
                   label: const Text(
                     'SAVE RESULT',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.8,
                     ),
@@ -2156,21 +2157,21 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                     foregroundColor: Colors.white,
                     elevation: 4,
                     shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
-                    padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
               ),
 
               SizedBox(
-                height: 54,
+                height: 52,
                 child: OutlinedButton.icon(
                   onPressed: () => provider.shareLeadsFile(),
-                  icon: const Icon(Icons.share_rounded, size: 20, color: Color(0xFF0E3B6C)),
+                  icon: const Icon(Icons.share_rounded, size: 18, color: Color(0xFF0E3B6C)),
                   label: const Text(
                     'SHARE / EXPORT EXCEL',
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 12.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.6,
                       color: Color(0xFF0E3B6C),
@@ -2179,7 +2180,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   style: OutlinedButton.styleFrom(
                     backgroundColor: Colors.white,
                     side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                 ),
@@ -2190,12 +2191,12 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: const [
-              Icon(Icons.folder_open_rounded, size: 16, color: Color(0xFF64748B)),
+              Icon(Icons.folder_open_rounded, size: 15, color: Color(0xFF64748B)),
               SizedBox(width: 6),
               Text(
                 'Stored directly on tablet in Downloads/Websol_Leads.xlsx',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF64748B),
                 ),
@@ -2217,10 +2218,10 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           controller: _nameController,
           keyboardType: TextInputType.name,
           textCapitalization: TextCapitalization.words,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: 'Enter full name',
-            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -2253,7 +2254,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(10),
           ],
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: '10-digit number',
             prefixIcon: const Padding(
@@ -2261,14 +2262,14 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
               child: Text(
                 '+91',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFF0E3B6C),
                 ),
               ),
             ),
             prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
-            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -2297,10 +2298,10 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         TextField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w600),
           decoration: InputDecoration(
             hintText: 'Enter email address',
-            hintStyle: const TextStyle(fontSize: 14, color: Color(0xFF94A3B8)),
+            hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
             contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -2380,7 +2381,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         Text(
           'READY TO EXPLORE\nYOUR SOLAR FUTURE?',
           style: TextStyle(
-            fontSize: isCompact ? 22 : 26,
+            fontSize: isCompact ? 17 : 21,
             fontWeight: FontWeight.w900,
             color: const Color(0xFF0E3B6C),
             height: 1.15,
@@ -2391,7 +2392,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         const Text(
           'Powering Tomorrow’s Energy',
           style: TextStyle(
-            fontSize: 14,
+            fontSize: 12,
             fontWeight: FontWeight.w800,
             color: Color(0xFFF36A21),
             letterSpacing: 0.2,
@@ -2401,7 +2402,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
         const Text(
           'Discover how Websol can help power a more sustainable tomorrow.',
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 11,
             color: Color(0xFF64748B),
             height: 1.45,
           ),
@@ -2428,7 +2429,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
           Text(
             'Scan the QR code to connect with Websol',
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 10.5,
               fontWeight: FontWeight.w700,
               color: Color(0xFF0E3B6C),
             ),
@@ -2450,7 +2451,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             'CLEANER ENERGY',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.5,
             ),
@@ -2463,7 +2464,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             'GREENER TOMORROW',
             style: TextStyle(
               color: Color(0xFFF36A21),
-              fontSize: 13,
+              fontSize: 11,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.5,
             ),
