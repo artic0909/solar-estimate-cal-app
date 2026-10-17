@@ -84,7 +84,7 @@ void main() {
     expect(find.text('Phone Number (10 digits) *'), findsOneWidget);
     expect(find.text('Email ID *'), findsOneWidget);
     expect(find.text('SAVE RESULT'), findsNothing);
-    expect(find.text('I agree to let Websol use my data to estimate my electricity savings.'), findsOneWidget);
+    expect(find.text('I consent Websol to use my personal data to estimate electricity cost savings.'), findsOneWidget);
     expect(find.text('SHARE / EXPORT EXCEL'), findsNothing);
 
     // 7. Section 5: Footer & Brand
@@ -159,7 +159,7 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 4));
 
     // Disclaimer text is present right above GET MY ESTIMATE
-    expect(find.text('I agree to let Websol use my data to estimate my electricity savings.'), findsOneWidget);
+    expect(find.text('I consent Websol to use my personal data to estimate electricity cost savings.'), findsOneWidget);
 
     // Enter bill and load
     final billField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('5000') == true);

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../widgets/websol_logo.dart';
 import '../widgets/doodle_arrow.dart';
 import '../widgets/qr_code_widget.dart';
-import '../widgets/top_alert.dart';
 import '../widgets/appliance_quantity_selector.dart';
 import '../core/sunhour_table.dart';
 import '../models/solar_input.dart';
@@ -60,7 +59,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
   @override
   void dispose() {
-    TopAlert.dismiss();
     _nameController.dispose();
     _phoneController.dispose();
     _emailController.dispose();
@@ -118,23 +116,11 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   void _handleGetMyEstimate() {
     final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
     if (bill <= 0) {
-      TopAlert.show(
-        context,
-        title: 'Invalid Electricity Bill',
-        message: 'Monthly electricity bill must be greater than 0.',
-        type: TopAlertType.error,
-      );
       return;
     }
 
     final input = _buildCurrentInput();
     if (input.totalLoadWatts <= 0) {
-      TopAlert.show(
-        context,
-        title: 'Appliances Required',
-        message: 'Please specify at least one appliance or load.',
-        type: TopAlertType.error,
-      );
       return;
     }
 
@@ -176,7 +162,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     });
 
     context.read<SolarCalculatorProvider>().clearAll();
-    TopAlert.dismiss();
 
     _scrollToCustomerDetails();
   }
