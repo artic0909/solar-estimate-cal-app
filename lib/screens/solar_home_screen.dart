@@ -48,7 +48,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
   final GlobalKey _calculatorKey = GlobalKey();
   final GlobalKey _customerKey = GlobalKey();
   final GlobalKey _resultsKey = GlobalKey();
-  final GlobalKey _leadKey = GlobalKey();
 
   static final List<String> _indianStates = sunhourTable.keys.toList()..sort();
   bool _hasCalculated = false;
@@ -100,7 +99,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     );
   }
 
-  void _syncAndCalculate({bool notifyUI = true}) {
+  void _syncAndCalculate() {
     final provider = context.read<SolarCalculatorProvider>();
     provider.setInput(_buildCurrentInput(), recalculate: true);
   }
@@ -116,127 +115,40 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     }
   }
 
-  Future<void> _handleSaveLead() async {
-    final rawName = _nameController.text.trim();
-    final rawMobile = _phoneController.text.trim();
-    final rawEmail = _emailController.text.trim();
+  void _handleGetMyEstimate() {
+    final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
+    if (bill <= 0) {
+      TopAlert.show(
+        context,
+        title: 'Invalid Electricity Bill',
+        message: 'Monthly electricity bill must be greater than 0.',
+        type: TopAlertType.error,
+      );
+      return;
+    }
 
-    // 1. Check if user calculated estimate first, or auto-calculate if inputs are provided
-    final provider = context.read<SolarCalculatorProvider>();
-    if (!_hasCalculated || provider.result == null) {
-      final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
-      if (bill <= 0) {
-        TopAlert.show(
-          context,
-          title: 'Monthly Bill Required',
-          message: 'Please enter your monthly electricity bill before saving.',
-          type: TopAlertType.warning,
-        );
-        _scrollToCalculator();
-        return;
-      }
-      final input = _buildCurrentInput();
-      if (input.totalLoadWatts <= 0) {
-        TopAlert.show(
-          context,
-          title: 'Load Required',
-          message: 'Please specify at least one appliance count or load before saving.',
-          type: TopAlertType.warning,
-        );
-        _scrollToCalculator();
-        return;
-      }
-      _syncAndCalculate(notifyUI: true);
+    final input = _buildCurrentInput();
+    if (input.totalLoadWatts <= 0) {
+      TopAlert.show(
+        context,
+        title: 'Appliances Required',
+        message: 'Please specify at least one appliance or load.',
+        type: TopAlertType.error,
+      );
+      return;
+    }
+
+    setState(() {
       _hasCalculated = true;
-    }
+    });
 
-    // 2. Validate Customer Name
-    if (rawName.isEmpty) {
-      TopAlert.show(
-        context,
-        title: 'Customer Name Required',
-        message: 'Please enter the customer\'s full name.',
-        type: TopAlertType.error,
-      );
-      _scrollToCustomerDetails();
-      return;
-    }
+    final provider = context.read<SolarCalculatorProvider>();
+    provider.setInput(input, recalculate: true);
 
-    // 3. Validate Phone Number (10 digits)
-    if (rawMobile.isEmpty) {
-      TopAlert.show(
-        context,
-        title: 'Phone Number Required',
-        message: 'Please enter customer 10-digit mobile number.',
-        type: TopAlertType.error,
-      );
-      _scrollToCustomerDetails();
-      return;
-    }
-    if (rawMobile.length != 10) {
-      TopAlert.show(
-        context,
-        title: 'Invalid Mobile Number',
-        message: 'Mobile number must be exactly 10 digits.',
-        type: TopAlertType.error,
-      );
-      _scrollToCustomerDetails();
-      return;
-    }
+    // Auto-save lead in the background without pop-ups or alerts
+    provider.saveCurrentLead();
 
-    // 4. Validate Email Address
-    if (rawEmail.isEmpty) {
-      TopAlert.show(
-        context,
-        title: 'Email Address Required',
-        message: 'Please enter customer email address.',
-        type: TopAlertType.error,
-      );
-      _scrollToCustomerDetails();
-      return;
-    }
-    final emailPattern = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!emailPattern.hasMatch(rawEmail)) {
-      TopAlert.show(
-        context,
-        title: 'Invalid Email Address',
-        message: 'Please enter a valid email address (e.g. name@domain.com).',
-        type: TopAlertType.error,
-      );
-      _scrollToCustomerDetails();
-      return;
-    }
-
-    // Set input with strictly validated customer details
-    final currentInput = _buildCurrentInput().copyWith(
-      name: rawName,
-      mobile: rawMobile,
-      email: rawEmail,
-    );
-    provider.setInput(currentInput, recalculate: true);
-
-    final success = await provider.saveCurrentLead();
-
-    if (mounted) {
-      if (success) {
-        // Form data is deliberately kept intact as requested:
-        // "it must keep the data until i press clear btn"
-
-        TopAlert.show(
-          context,
-          title: 'Saved Successfully',
-          message: 'Saved to Downloads (Websol_Leads.xlsx & CSV)',
-          type: TopAlertType.success,
-        );
-      } else {
-        TopAlert.show(
-          context,
-          title: 'Save Failed',
-          message: provider.errorMessage ?? 'Failed to save result to Excel file.',
-          type: TopAlertType.error,
-        );
-      }
-    }
+    _scrollToResults();
   }
 
   void _handleClearForm() {
@@ -264,13 +176,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     });
 
     context.read<SolarCalculatorProvider>().clearAll();
-
-    TopAlert.show(
-      context,
-      title: 'Form Reset',
-      message: 'All calculator and customer details have been reset.',
-      type: TopAlertType.info,
-    );
+    TopAlert.dismiss();
 
     _scrollToCustomerDetails();
   }
@@ -367,13 +273,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
                         // 4. Environmental Impact Card
                         _buildImpactCard(context, result),
-                        const SizedBox(height: 28),
-
-                        // 5. Save Estimate Banner / Local Excel Action
-                        Container(
-                          key: _leadKey,
-                          child: _buildResultsSaveCard(context, provider),
-                        ),
                       ],
 
                       const SizedBox(height: 32),
@@ -823,7 +722,33 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
             },
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
+
+          // Disclaimer: right above "GET MY ESTIMATE" button
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.shield_outlined, size: 14, color: Color(0xFF64748B)),
+                  SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'I agree to let Websol use my data to estimate my electricity savings.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF64748B),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           // Action Buttons: "GET MY ESTIMATE →" & "CLEAR"
           Center(
@@ -837,49 +762,13 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   width: 270,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: () {
-                      final bill = double.tryParse(_billController.text.trim()) ?? 0.0;
-                      if (bill <= 0) {
-                        TopAlert.show(
-                          context,
-                          title: 'Invalid Electricity Bill',
-                          message: 'Monthly electricity bill must be greater than 0.',
-                          type: TopAlertType.error,
-                        );
-                        return;
-                      }
-
-                      final input = _buildCurrentInput();
-                      if (input.totalLoadWatts <= 0) {
-                        TopAlert.show(
-                          context,
-                          title: 'Appliances Required',
-                          message: 'Please specify at least one appliance or load.',
-                          type: TopAlertType.error,
-                        );
-                        return;
-                      }
-
-                      setState(() {
-                        _hasCalculated = true;
-                      });
-                      _syncAndCalculate(notifyUI: true);
-                      _scrollToResults();
-
-                      final result = context.read<SolarCalculatorProvider>().result;
-                      if (result != null) {
-                        TopAlert.show(
-                          context,
-                          title: 'Estimate Calculated',
-                          message: '${result.modules} modules • ₹ ${_formatIndianCurrency(result.monthlySaving)} estimated monthly savings.',
-                          type: TopAlertType.success,
-                        );
-                      }
-                    },
+                    onPressed: _hasCalculated ? null : _handleGetMyEstimate,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF36A21),
                       foregroundColor: Colors.white,
-                      elevation: 5,
+                      disabledBackgroundColor: const Color(0xFFCBD5E1),
+                      disabledForegroundColor: const Color(0xFF94A3B8),
+                      elevation: _hasCalculated ? 0 : 5,
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.45),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
@@ -2133,65 +2022,6 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     );
   }
 
-  // ==========================================
-  // SECTION 5: SAVE RESULT BUTTON (BELOW ESTIMATE RESULTS)
-  // ==========================================
-  Widget _buildResultsSaveCard(BuildContext context, SolarCalculatorProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10.0),
-      child: Column(
-        children: [
-          Center(
-            child: SizedBox(
-              height: 52,
-              child: ElevatedButton.icon(
-                onPressed: provider.isSavingLead ? null : _handleSaveLead,
-                icon: provider.isSavingLead
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-                      )
-                    : const Icon(Icons.save_rounded, size: 20),
-                label: const Text(
-                  'SAVE RESULT',
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF36A21),
-                  foregroundColor: Colors.white,
-                  elevation: 4,
-                  shadowColor: const Color(0xFFF36A21).withValues(alpha: 0.4),
-                  padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.folder_open_rounded, size: 15, color: Color(0xFF64748B)),
-              SizedBox(width: 6),
-              Text(
-                'Stored directly on tablet in Downloads/Websol_Leads.xlsx',
-                style: TextStyle(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF64748B),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildNameInput() {
     return Column(

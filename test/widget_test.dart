@@ -83,7 +83,8 @@ void main() {
     expect(find.text('Full Name *'), findsOneWidget);
     expect(find.text('Phone Number (10 digits) *'), findsOneWidget);
     expect(find.text('Email ID *'), findsOneWidget);
-    expect(find.text('SAVE RESULT'), findsOneWidget);
+    expect(find.text('SAVE RESULT'), findsNothing);
+    expect(find.text('I agree to let Websol use my data to estimate my electricity savings.'), findsOneWidget);
     expect(find.text('SHARE / EXPORT EXCEL'), findsNothing);
 
     // 7. Section 5: Footer & Brand
@@ -147,7 +148,7 @@ void main() {
     expect(find.text('Scan the QR code to connect with Websol'), findsOneWidget);
   });
 
-  testWidgets('Validation: without name, phone, and email, data never saves and shows alert in top right',
+  testWidgets('Clicking GET MY ESTIMATE disables/freezes button and auto-saves in background',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1280, 800);
     tester.view.devicePixelRatio = 1.0;
@@ -156,6 +157,9 @@ void main() {
 
     await tester.pumpWidget(const SolarEstimateApp());
     await tester.pumpAndSettle(const Duration(seconds: 4));
+
+    // Disclaimer text is present right above GET MY ESTIMATE
+    expect(find.text('I agree to let Websol use my data to estimate my electricity savings.'), findsOneWidget);
 
     // Enter bill and load
     final billField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('5000') == true);
@@ -167,24 +171,28 @@ void main() {
     await tester.enterText(loadField, '4915');
     await tester.pumpAndSettle();
 
-    // Calculate estimate first
-    await tester.ensureVisible(find.text('GET MY ESTIMATE'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('GET MY ESTIMATE'));
+    // Verify GET MY ESTIMATE button is enabled initially
+    final estimateBtnFinder = find.widgetWithText(ElevatedButton, 'GET MY ESTIMATE');
+    ElevatedButton estimateBtn = tester.widget<ElevatedButton>(estimateBtnFinder);
+    expect(estimateBtn.onPressed, isNotNull);
+
+    // Tap GET MY ESTIMATE
+    await tester.ensureVisible(estimateBtnFinder);
+    await tester.tap(estimateBtnFinder);
     await tester.pumpAndSettle();
 
-    // Tap SAVE RESULT without entering customer info
-    await tester.ensureVisible(find.text('SAVE RESULT'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('SAVE RESULT'));
-    await tester.pumpAndSettle();
+    // Verify results are displayed
+    expect(find.text('YOUR SOLAR ESTIMATE'), findsOneWidget);
 
-    // Verify error alert is shown
-    expect(find.text('Customer Name Required'), findsOneWidget);
-    expect(find.text("Please enter the customer's full name."), findsOneWidget);
+    // SAVE RESULT button is completely removed
+    expect(find.text('SAVE RESULT'), findsNothing);
+
+    // Verify GET MY ESTIMATE is now frozen/disabled (onPressed is null)
+    estimateBtn = tester.widget<ElevatedButton>(estimateBtnFinder);
+    expect(estimateBtn.onPressed, isNull);
   });
 
-  testWidgets('Save result preserves form data until CLEAR button is pressed',
+  testWidgets('GET MY ESTIMATE freezes until CLEAR button is pressed to unlock it',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1280, 800);
     tester.view.devicePixelRatio = 1.0;
@@ -194,7 +202,6 @@ void main() {
     await tester.pumpWidget(const SolarEstimateApp());
     await tester.pumpAndSettle(const Duration(seconds: 4));
 
-    // Fill customer info
     // Fill customer info and calculator fields
     final nameField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('full name') == true);
     final phoneField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('10-digit') == true);
@@ -215,23 +222,17 @@ void main() {
     await tester.pump();
 
     // Click GET MY ESTIMATE
-    await tester.ensureVisible(find.text('GET MY ESTIMATE'));
+    final estimateBtnFinder = find.widgetWithText(ElevatedButton, 'GET MY ESTIMATE');
+    await tester.ensureVisible(estimateBtnFinder);
     await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('GET MY ESTIMATE'));
+    await tester.tap(estimateBtnFinder);
     await tester.pump(const Duration(seconds: 4));
 
-    // Tap SAVE RESULT
-    await tester.ensureVisible(find.text('SAVE RESULT'));
-    await tester.pump(const Duration(milliseconds: 500));
-    await tester.tap(find.text('SAVE RESULT'));
-    await tester.runAsync(() async {
-      await Future.delayed(const Duration(seconds: 1));
-    });
-    await tester.pump();
+    // Verify button is frozen
+    ElevatedButton estimateBtn = tester.widget<ElevatedButton>(estimateBtnFinder);
+    expect(estimateBtn.onPressed, isNull);
 
-
-
-    // Verify form fields are STILL intact (NOT erased on save)
+    // Verify form fields are STILL intact
     expect(find.text('Supriyo Das'), findsOneWidget);
     expect(find.text('9876543210'), findsOneWidget);
     expect(find.text('supriyo@example.com'), findsOneWidget);
@@ -249,5 +250,9 @@ void main() {
     expect(find.text('9876543210'), findsNothing);
     expect(find.text('supriyo@example.com'), findsNothing);
     expect(find.text('YOUR SOLAR ESTIMATE'), findsNothing);
+
+    // Button must now be unlocked (onPressed is not null)
+    estimateBtn = tester.widget<ElevatedButton>(estimateBtnFinder);
+    expect(estimateBtn.onPressed, isNotNull);
   });
 }
