@@ -5,6 +5,7 @@ import '../widgets/websol_logo.dart';
 import '../widgets/doodle_arrow.dart';
 import '../widgets/qr_code_widget.dart';
 import '../widgets/top_alert.dart';
+import '../widgets/appliance_quantity_selector.dart';
 import '../core/sunhour_table.dart';
 import '../models/solar_input.dart';
 import '../models/solar_result.dart';
@@ -1395,46 +1396,41 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
     required int count,
     required ValueChanged<int> onChanged,
   }) {
-    return Container(
+    final hasValue = count > 0;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: hasValue ? const Color(0xFFF8FAFC) : const Color(0xFFFAFAFA),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(
+          color: hasValue ? const Color(0xFF0E3B6C).withValues(alpha: 0.35) : const Color(0xFFE2E8F0),
+          width: 1,
+        ),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 15, color: const Color(0xFF64748B)),
+          Icon(
+            icon,
+            size: 15,
+            color: hasValue ? const Color(0xFFF36A21) : const Color(0xFF64748B),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               label,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF334155),
+                fontWeight: hasValue ? FontWeight.w700 : FontWeight.w600,
+                color: hasValue ? const Color(0xFF0F172A) : const Color(0xFF334155),
               ),
             ),
           ),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<int>(
-              value: count,
-              isDense: true,
-              icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 14, color: Color(0xFF64748B)),
-              items: List.generate(21, (index) => index).map((i) {
-                return DropdownMenuItem<int>(
-                  value: i,
-                  child: Text(
-                    '$i',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                  ),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) onChanged(val);
-              },
-            ),
+          const SizedBox(width: 6),
+          ApplianceQuantitySelector(
+            count: count,
+            onChanged: onChanged,
           ),
         ],
       ),

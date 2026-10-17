@@ -196,17 +196,22 @@ void main() {
 
     // Fill customer info
     // Fill customer info and calculator fields
-    final textFields = find.byType(TextField);
-    await tester.ensureVisible(textFields.at(0));
-    await tester.enterText(textFields.at(0), 'Supriyo Das');
-    await tester.ensureVisible(textFields.at(1));
-    await tester.enterText(textFields.at(1), '9876543210');
-    await tester.ensureVisible(textFields.at(2));
-    await tester.enterText(textFields.at(2), 'supriyo@example.com');
-    await tester.ensureVisible(textFields.at(3));
-    await tester.enterText(textFields.at(3), '5000');
-    await tester.ensureVisible(textFields.at(4));
-    await tester.enterText(textFields.at(4), '4915');
+    final nameField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('full name') == true);
+    final phoneField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('10-digit') == true);
+    final emailField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('email address') == true);
+    final billField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('5000') == true);
+    final loadField = find.byWidgetPredicate((w) => w is TextField && w.decoration?.hintText?.contains('200') == true);
+
+    await tester.ensureVisible(nameField);
+    await tester.enterText(nameField, 'Supriyo Das');
+    await tester.ensureVisible(phoneField);
+    await tester.enterText(phoneField, '9876543210');
+    await tester.ensureVisible(emailField);
+    await tester.enterText(emailField, 'supriyo@example.com');
+    await tester.ensureVisible(billField);
+    await tester.enterText(billField, '5000');
+    await tester.ensureVisible(loadField);
+    await tester.enterText(loadField, '4915');
     await tester.pump();
 
     // Click GET MY ESTIMATE
