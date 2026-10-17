@@ -3,7 +3,7 @@
     "short_name": "Websole",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
+    "background_color": "#ffffff",
     "theme_color": "#F36A21",
     "description": "Interactive Solar Estimate Calculator for WEBSOL.",
     "orientation": "portrait-primary",

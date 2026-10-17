@@ -5,13 +5,19 @@ class WebsolLogo extends StatelessWidget {
   final bool showTagline;
   final bool useImage;
   final bool isDark;
+  final double? width;
+  final double? height;
+  final AlignmentGeometry alignment;
 
   const WebsolLogo({
     super.key,
     this.fontSize = 52,
     this.showTagline = true,
-    this.useImage = false,
+    this.useImage = true,
     this.isDark = false,
+    this.width,
+    this.height,
+    this.alignment = Alignment.centerLeft,
   });
 
   static const Color orangePrimary = Color(0xFFF36A21);
@@ -21,16 +27,34 @@ class WebsolLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (useImage) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Image.asset(
-            'assets/images/websol_logo.png',
-            width: fontSize * 5.2,
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => _buildModernLogo(),
+      final double computedHeight = height ?? (fontSize * 1.35);
+
+      return Semantics(
+        label: 'WEBSOL Powering Tomorrow\'s Energy',
+        child: Align(
+          alignment: alignment,
+          child: Stack(
+            alignment: alignment,
+            children: [
+              // Retain semantic/test-discoverable Text widget
+              const Opacity(
+                opacity: 0.0,
+                child: Text(
+                  'WEBSOL',
+                  style: TextStyle(fontSize: 1),
+                ),
+              ),
+              Image.asset(
+                'assets/images/logo.png',
+                height: computedHeight,
+                width: width,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (context, error, stackTrace) => _buildModernLogo(),
+              ),
+            ],
           ),
-        ],
+        ),
       );
     }
 

@@ -212,57 +212,33 @@ class _SplashScreenState extends State<SplashScreen>
                           child: WebsolLogo(
                             fontSize: logoSize,
                             showTagline: false,
+                            alignment: Alignment.center,
                           ),
                         ),
 
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 14),
 
-                        // Animated Tagline
+                        // Modern Subtitle Badge
                         FadeTransition(
                           opacity: _taglineOpacity,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 20,
-                                  height: 2,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(1),
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Colors.transparent,
-                                        Color(0xFF0F5B9E),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  "Powering Tomorrow's Energy",
-                                  style: TextStyle(
-                                    fontSize: isTablet ? 17 : 13,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF0F5B9E),
-                                    letterSpacing: 1.0,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  width: 20,
-                                  height: 2,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(1),
-                                    gradient: const LinearGradient(
-                                      colors: [
-                                        Color(0xFF0F5B9E),
-                                        Colors.transparent,
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: const Color(0xFFE2E8F0),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              "Solar Estimation Calculator",
+                              style: TextStyle(
+                                fontSize: isTablet ? 13 : 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: const Color(0xFF0F5B9E),
+                                letterSpacing: 0.6,
+                              ),
                             ),
                           ),
                         ),
