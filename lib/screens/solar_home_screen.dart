@@ -1444,6 +1444,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
 
           // Secondary System Specs Summary Pill
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
