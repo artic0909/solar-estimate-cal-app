@@ -736,7 +736,7 @@ class _SolarHomeScreenState extends State<SolarHomeScreen> {
                   SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      'I agree to let Websol use my data to estimate my electricity savings.',
+                      'I consent Websol to use my personal data to estimate electricity cost savings.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,
